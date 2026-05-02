@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>CANVAS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='65'>🚘</text><text x='50' y='45' font-size='45'>📡</text></svg>">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg: #f0f4f8;
+            --bg2: #e2e8f0;
+            --bg3: #fff;
+            --border: #cbd5e1;
+            --blue: #2563eb;
+            --cyan: #0891b2;
+            --silver: #334155;
+            --sdim: #64748b;
+            --gold: #d97706;
+            --red: #dc2626;
+            --green: #059669;
+            --yellow: #d97706;
+            --white: #1e293b;
+            --tdim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--white);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .shell {
+            display: grid;
+            grid-template-rows: 64px 1fr 52px;
+            height: 100vh;
+            padding: 0 16px;
+            gap: 6px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            margin: 0 -16px;
+            padding: 0 16px;
+            border-bottom: 2px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, .3);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(37, 99, 235, .0);
+            }
+        }
+
+        .logo-mark::after {
+            content: '◈';
+            color: var(--blue);
+            font-size: 14px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--blue);
+            letter-spacing: 2px;
+        }
+
+        .logo-sub {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--sdim);
+            letter-spacing: 1px;
+        }
+
+        .hcenter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ign-badge {
+            padding: 4px 12px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--tdim);
+            background: #f8fafc;
+            transition: all .5s;
+        }
+
+        .ign-badge.running {
+            border-color: var(--green);
+            color: var(--green);
+            background: #f0fdf4;
+        }
+
+        .fpill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .fpill.crit {
+            background: #fef2f2;
+            border: 2px solid var(--red);
+            color: var(--red);
+        }
+
+        .fpill.warn {
+            background: #fffbeb;
+            border: 2px solid var(--yellow);
+            color: var(--yellow);
+        }
+
+        .hright {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 3px;
+        }
+
+        .tab {
+            padding: 4px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--sdim);
+            cursor: pointer;
+            transition: all .2s;
+            background: #f8fafc;
+        }
+
+        .tab.active {
+            border-color: var(--blue);
+            color: var(--blue);
+            background: #eff6ff;
+        }
+
+        .tab:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .phase-badge {
+            padding: 4px 14px;
+            border: 2px solid var(--blue);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--blue);
+            background: #eff6ff;
+            transition: all .3s;
+        }
+
+        .clock {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--sdim);
+        }
+
+        /* Tab Pages */
+        .page {
+            display: none;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .page.active {
+            display: grid;
+        }
+
+        /* ── MAIN PAGE ── */
+        #pg-main {
+            grid-template-columns: 300px 1fr 1fr 230px;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        /* Panel */
+        .panel {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--blue), var(--cyan));
+            border-radius: 12px 12px 0 0;
+        }
+
+        .ptitle {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--sdim);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Left col */
+        .left-col {
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .speed-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .gauge-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .gauge-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .ecu-boot {
+            overflow-y: auto;
+        }
+
+        .ecu-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 3px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+        }
+
+        .ecu-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--silver);
+        }
+
+        .ecu-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all .5s;
+        }
+
+        .ecu-dot.online {
+            background: var(--green);
+            box-shadow: 0 0 6px rgba(5, 150, 105, .5);
+        }
+
+        /* Center cols */
+        .center-col {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .center-col2 {
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .graph-panel {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-panel canvas {
+            max-height: 120px !important;
+        }
+
+        /* Hybrid */
+        .hybrid-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .hybrid-mode-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--blue);
+            transition: all .5s;
+        }
+
+        .hybrid-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--sdim);
+        }
+
+        .hybrid-inds {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .h-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 8px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+        }
+
+        .h-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all .3s;
+            flex-shrink: 0;
+        }
+
+        .h-dot.on {
+            background: var(--green);
+            box-shadow: 0 0 6px rgba(5, 150, 105, .5);
+        }
+
+        .h-lbl {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--sdim);
+        }
+
+        .h-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--blue);
+            margin-left: auto;
+        }
+
+        /* Right col */
+        .right-col {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .dtc-panel {
+            overflow-y: auto;
+        }
+
+        .dtc-empty {
+            text-align: center;
+            color: var(--tdim);
+            font-size: 12px;
+            padding: 16px;
+            font-weight: 600;
+        }
+
+        .dtc-item {
+            padding: 7px 9px;
+            border-radius: 7px;
+            margin-bottom: 5px;
+            border-left: 4px solid var(--border);
+            background: #f8fafc;
+        }
+
+        .dtc-item.CRITICAL {
+            border-left-color: var(--red);
+            background: #fef2f2;
+        }
+
+        .dtc-item.WARNING {
+            border-left-color: var(--yellow);
+            background: #fffbeb;
+        }
+
+        .dtc-item.INFO {
+            border-left-color: var(--blue);
+            background: #eff6ff;
+        }
+
+        .dtc-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .dtc-item.CRITICAL .dtc-code {
+            color: var(--red);
+        }
+
+        .dtc-item.WARNING .dtc-code {
+            color: var(--yellow);
+        }
+
+        .dtc-item.INFO .dtc-code {
+            color: var(--blue);
+        }
+
+        .dtc-desc {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--sdim);
+            margin-top: 1px;
+        }
+
+        .dtc-time {
+            font-size: 10px;
+            color: var(--tdim);
+            margin-top: 1px;
+        }
+
+        /* Tyre */
+        .tyre-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+
+        .tyre-cell {
+            background: #f8fafc;
+            border-radius: 7px;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all .3s;
+        }
+
+        .tyre-cell.warn {
+            border-color: var(--red);
+            background: #fef2f2;
+        }
+
+        .tyre-pos {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--sdim);
+        }
+
+        .tyre-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        /* Status list */
+        .status-list {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            overflow-y: auto;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid var(--border);
+            transition: border-color .3s;
+        }
+
+        .status-item:hover {
+            border-left-color: var(--blue);
+        }
+
+        .s-key {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--sdim);
+        }
+
+        .s-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        /* Battery bar */
+        .batt-wrap {
+            margin-top: 8px;
+        }
+
+        .batt-bar-bg {
+            height: 8px;
+            background: var(--bg2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .batt-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blue), var(--cyan));
+            border-radius: 4px;
+            transition: width 1s ease, background .5s;
+        }
+
+        /* Gear */
+        .gear-big {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--gold);
+            text-align: center;
+            line-height: 1;
+        }
+
+        /* ── CAN LOGGER PAGE ── */
+        #pg-logger {
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .logger-stat-row {
+            grid-column: 1/-1;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            display: none;
+        }
+
+        .stat-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        .stat-lbl {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--sdim);
+            letter-spacing: 1px;
+            margin-top: 3px;
+            text-transform: uppercase;
+        }
+
+        .ecu-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--bg2);
+        }
+
+        .ecu-bar-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--silver);
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .ecu-bar-bg {
+            flex: 1;
+            height: 8px;
+            background: var(--bg2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .ecu-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--blue), var(--cyan));
+            border-radius: 4px;
+            transition: width .5s ease;
+        }
+
+        .ecu-bar-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--sdim);
+            width: 60px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .top-id-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            background: #f8fafc;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .top-id-hex {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .top-id-ecu {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--sdim);
+        }
+
+        .top-id-cnt {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        /* ── FAULT INJECTOR PAGE ── */
+        #pg-injector {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .inj-header-row {
+            grid-column: 1/-1;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .scenario-card {
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+        }
+
+        .scenario-card:hover {
+            border-color: var(--blue);
+            box-shadow: 0 4px 16px rgba(37, 99, 235, .15);
+        }
+
+        .scenario-card.active {
+            border-color: var(--red);
+            background: #fef2f2;
+        }
+
+        .sc-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--silver);
+            margin-bottom: 4px;
+        }
+
+        .sc-desc {
+            font-size: 11px;
+            color: var(--sdim);
+            margin-bottom: 8px;
+        }
+
+        .sc-dtcs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .sc-dtc {
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: #fef2f2;
+            border: 1px solid rgba(220, 38, 38, .3);
+            color: var(--red);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        .inj-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all .2s;
+        }
+
+        .inj-btn.primary {
+            background: var(--blue);
+            color: #fff;
+        }
+
+        .inj-btn.primary:hover {
+            background: #1d4ed8;
+        }
+
+        .inj-btn.danger {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .inj-btn.danger:hover {
+            background: #b91c1c;
+        }
+
+        .inj-btn.success {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .inj-btn.success:hover {
+            background: #047857;
+        }
+
+        .inj-btn.secondary {
+            background: #f1f5f9;
+            color: var(--silver);
+            border: 1px solid var(--border);
+        }
+
+        .inj-btn.secondary:hover {
+            background: var(--bg2);
+        }
+
+        .inj-log {
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .inj-log-item {
+            padding: 8px 10px;
+            background: #f8fafc;
+            border-radius: 7px;
+            margin-bottom: 5px;
+            border-left: 4px solid var(--blue);
+        }
+
+        .inj-log-item.scenario {
+            border-left-color: var(--red);
+        }
+
+        .inj-log-type {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--sdim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .inj-log-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--silver);
+            margin-top: 2px;
+        }
+
+        .inj-log-time {
+            font-size: 10px;
+            color: var(--tdim);
+            margin-top: 1px;
+        }
+
+        .manual-inj {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .dtc-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--silver);
+            background: #f8fafc;
+            outline: none;
+        }
+
+        .dtc-input:focus {
+            border-color: var(--blue);
+        }
+
+        /* ── REPORT PAGE ── */
+        #pg-report {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .report-header-row {
+            grid-column: 1/-1;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .report-info {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+        }
+
+        .swc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .swc-table th {
+            text-align: left;
+            padding: 8px 10px;
+            background: #f8fafc;
+            color: var(--sdim);
+            font-weight: 700;
+            font-size: 10px;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .swc-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--bg2);
+            vertical-align: top;
+        }
+
+        .swc-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        .bus-tag {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            border: 1px solid;
+        }
+
+        .bus-can {
+            border-color: #2563eb;
+            color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .bus-lin {
+            border-color: #059669;
+            color: #059669;
+            background: #f0fdf4;
+        }
+
+        .bus-eth {
+            border-color: #d97706;
+            color: #d97706;
+            background: #fffbeb;
+        }
+
+        .bus-mix {
+            border-color: #7c3aed;
+            color: #7c3aed;
+            background: #f5f3ff;
+        }
+
+        .io-in {
+            font-size: 10px;
+            color: var(--green);
+        }
+
+        .io-in::before {
+            content: '← ';
+        }
+
+        .io-out {
+            font-size: 10px;
+            color: var(--blue);
+        }
+
+        .io-out::before {
+            content: '→ ';
+        }
+
+        /* ADAS Bar */
+        .adas-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            margin: 0 -16px;
+            padding: 8px 16px;
+            border-top: 2px solid var(--border);
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, .04);
+        }
+
+        .adas-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--silver);
+            white-space: nowrap;
+            margin-right: 4px;
+        }
+
+        .adas-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--tdim);
+            background: #f8fafc;
+            transition: all .3s;
+            white-space: nowrap;
+        }
+
+        .adas-pill.active {
+            border-color: var(--red);
+            color: var(--red);
+            background: #fef2f2;
+            animation: blink .8s ease-in-out infinite;
+        }
+
+        .adas-pill.active-green {
+            border-color: var(--green);
+            color: var(--green);
+            background: #f0fdf4;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .3
+            }
+        }
+
+        /* Bus load ring */
+        .bus-load-ring {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+        }
+
+        .bus-load-ring canvas {
+            width: 100px !important;
+            height: 100px !important;
+        }
+
+        .bus-load-val {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .bus-load-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        .bus-load-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--sdim);
+            letter-spacing: 1px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="shell">
+
+        <!-- ── Header ── -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-mark"></div>
+                <div>
+                    <div class="logo-text">CANVAS</div>
+                    <div class="logo-sub" style="font-size: 8px;">CAN-LIN Automotive Network Virtual Architecture Simulator</div>
+                </div>
+            </div>
+
+            <div class="hcenter">
+                <div class="ign-badge" id="ignBadge">● OFF</div>
+                <div class="fpill crit" id="critCount">⬤ 0 CRITICAL</div>
+                <div class="fpill warn" id="warnCount">⬤ 0 WARNINGS</div>
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('main')">DASHBOARD</div>
+                    <div class="tab" onclick="switchTab('logger')">CAN LOGGER</div>
+                    <div class="tab" onclick="switchTab('injector')">FAULT INJECT</div>
+                    <div class="tab" onclick="switchTab('report')">REPORT</div>
+                </div>
+            </div>
+
+            <div class="hright">
+                <div class="phase-badge" id="phaseBadge">● IDLE</div>
+                <div class="clock" id="clock">--:--:--</div>
+            </div>
+        </header>
+
+        <!-- ── Pages ── -->
+
+        <!-- MAIN DASHBOARD -->
+        <div class="page active" id="pg-main">
+
+            <!-- Col 1: Gauges -->
+            <div class="left-col">
+                <div class="panel speed-panel">
+                    <div class="ptitle">Speed</div>
+                    <canvas id="speedGauge" width="180" height="180" style="width:180px;height:180px"></canvas>
+                    <div class="batt-wrap" style="width:100%;margin-top:6px">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                            <span style="font-size:11px;font-weight:700;color:var(--sdim)">BATTERY SOC</span>
+                            <span
+                                style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue)"
+                                id="socVal">--%</span>
+                        </div>
+                        <div class="batt-bar-bg">
+                            <div class="batt-bar-fill" id="socBar" style="width:75%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="gauge-row">
+                        <div class="gauge-wrap">
+                            <div class="ptitle" style="text-align:center">RPM</div>
+                            <canvas id="rpmGauge" width="120" height="120" style="width:120px;height:120px"></canvas>
+                        </div>
+                        <div class="gauge-wrap">
+                            <div class="ptitle" style="text-align:center">TEMP °C</div>
+                            <canvas id="tempGauge" width="120" height="120" style="width:120px;height:120px"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel ecu-boot">
+                    <div class="ptitle">ECU Boot Status</div>
+                    <div id="ecuBootList"></div>
+                </div>
+            </div>
+
+            <!-- Col 2: Graphs -->
+            <div class="center-col">
+                <div class="panel graph-panel">
+                    <div class="ptitle">Speed km/h</div>
+                    <canvas id="speedChart"></canvas>
+                </div>
+                <div class="panel graph-panel">
+                    <div class="ptitle">Engine RPM</div>
+                    <canvas id="rpmChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Col 3: Hybrid + Tyre -->
+            <div class="center-col2">
+                <div class="panel">
+                    <div class="ptitle">Hybrid System</div>
+                    <div class="hybrid-card">
+                        <div>
+                            <div class="hybrid-mode-val" id="hybridMode">--</div>
+                            <div class="hybrid-label">DRIVE MODE</div>
+                            <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+                                <div class="gear-big" id="gearDisp">1</div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:700;color:var(--sdim)">GEAR</div>
+                                    <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--silver)"
+                                        id="driveModeDisp">D</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hybrid-inds">
+                            <div class="h-row">
+                                <div class="h-dot" id="engineDot"></div>
+                                <div class="h-lbl">ENGINE</div>
+                                <div class="h-val" id="engineVal">OFF</div>
+                            </div>
+                            <div class="h-row">
+                                <div class="h-dot" id="motorDot"></div>
+                                <div class="h-lbl">MOTOR</div>
+                                <div class="h-val" id="motorVal">OFF</div>
+                            </div>
+                            <div class="h-row">
+                                <div class="h-dot" id="regenDot"></div>
+                                <div class="h-lbl">REGEN</div>
+                                <div class="h-val" id="regenVal">0.0kW</div>
+                            </div>
+                            <div class="h-row">
+                                <div class="h-dot on" id="battDot"></div>
+                                <div class="h-lbl">BATTERY</div>
+                                <div class="h-val" id="battVal">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div>
+                            <div class="ptitle">Tyre Pressure PSI</div>
+                            <div class="tyre-grid">
+                                <div class="tyre-cell" id="tfl">
+                                    <div class="tyre-pos">FL</div>
+                                    <div class="tyre-val" id="tflVal">--</div>
+                                </div>
+                                <div class="tyre-cell" id="tfr">
+                                    <div class="tyre-pos">FR</div>
+                                    <div class="tyre-val" id="tfrVal">--</div>
+                                </div>
+                                <div class="tyre-cell" id="trl">
+                                    <div class="tyre-pos">RL</div>
+                                    <div class="tyre-val" id="trlVal">--</div>
+                                </div>
+                                <div class="tyre-cell" id="trr">
+                                    <div class="tyre-pos">RR</div>
+                                    <div class="tyre-val" id="trrVal">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="ptitle">ECU Telemetry</div>
+                            <div class="status-list">
+                                <div class="status-item"><span class="s-key">TORQUE Nm</span><span class="s-val"
+                                        id="s_torque">--</span></div>
+                                <div class="status-item"><span class="s-key">BRAKE bar</span><span class="s-val"
+                                        id="s_brake">--</span></div>
+                                <div class="status-item"><span class="s-key">IMPACT G</span><span class="s-val"
+                                        id="s_impact">--</span></div>
+                                <div class="status-item"><span class="s-key">VOLTAGE V</span><span class="s-val"
+                                        id="s_voltage">--</span></div>
+                                <div class="status-item"><span class="s-key">MOTOR MODE</span><span class="s-val"
+                                        id="s_mmode">--</span></div>
+                                <div class="status-item"><span class="s-key">RECOVERED Wh</span><span class="s-val"
+                                        id="s_energy">--</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Col 4: DTC -->
+            <div class="right-col">
+                <div class="panel" style="overflow:hidden;min-height:0">
+                    <div class="ptitle">OBD-II Diagnostic Trouble Codes</div>
+                    <div class="dtc-panel" id="dtcPanel" style="max-height:calc(100% - 22px);overflow-y:auto">
+                        <div class="dtc-empty" id="dtcEmpty">✓ NO ACTIVE FAULTS</div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="ptitle">SOC + Temperature</div>
+                    <div class="graph-panel" style="height:100px"><canvas id="socChart"></canvas></div>
+                    <div class="graph-panel" style="height:90px;margin-top:6px"><canvas id="tempChart"></canvas></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- CAN LOGGER PAGE -->
+        <div class="page" id="pg-logger">
+
+            <div class="logger-stat-row">
+                <div class="stat-card" style="position:relative">
+                    <div class="stat-val" id="lg_total">0</div>
+                    <div class="stat-lbl">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="lg_rate">0</div>
+                    <div class="stat-lbl">Messages / Sec</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="lg_errors" style="color:var(--red)">0</div>
+                    <div class="stat-lbl">Bus Errors</div>
+                </div>
+                <div class="stat-card">
+                    <canvas id="busLoadRing" width="100" height="100"></canvas>
+                    <div class="stat-lbl" style="margin-top:4px">Bus Load</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="lg_file" style="font-size:11px;word-break:break-all;color:var(--sdim)">--
+                    </div>
+                    <div class="stat-lbl">Log File</div>
+                </div>
+            </div>
+
+            <div class="panel" style="overflow:hidden;min-height:0">
+                <div class="ptitle">Message Count Per ECU</div>
+                <div id="ecuBarList" style="overflow-y:auto;max-height:calc(100% - 24px)"></div>
+            </div>
+
+            <div class="panel" style="overflow:hidden;min-height:0">
+                <div class="ptitle">Top Active CAN IDs</div>
+                <div id="topIdList" style="overflow-y:auto;max-height:calc(100% - 24px)"></div>
+            </div>
+
+            <div class="panel" style="overflow:hidden;min-height:0">
+                <div class="ptitle">Bus Load History</div>
+                <canvas id="busLoadChart" style="max-height:180px"></canvas>
+                <div class="ptitle" style="margin-top:12px">CAN Bus Parameters</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+                    <div class="status-item"><span class="s-key">Protocol</span><span class="s-val">CAN 2.0B</span>
+                    </div>
+                    <div class="status-item"><span class="s-key">Speed</span><span class="s-val">500 kbps</span></div>
+                    <div class="status-item"><span class="s-key">Max Frame</span><span class="s-val">8 bytes</span>
+                    </div>
+                    <div class="status-item"><span class="s-key">Termination</span><span class="s-val">120Ω×2</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FAULT INJECTOR PAGE -->
+        <div class="page" id="pg-injector">
+
+            <div class="inj-header-row">
+                <input class="dtc-input" id="dtcInputField" placeholder="Enter DTC code  e.g. P0217" maxlength="6">
+                <button class="inj-btn danger" onclick="injectManualDTC()">⚡ INJECT DTC</button>
+                <button class="inj-btn success" onclick="resetAllFaults()">✓ RESET ALL</button>
+                <div style="margin-left:auto;font-size:12px;font-weight:600;color:var(--sdim)">
+                    Active Scenario: <span id="activeScenario"
+                        style="color:var(--red);font-family:'JetBrains Mono',monospace">NONE</span>
+                </div>
+            </div>
+
+            <div class="panel" style="overflow:hidden;min-height:0">
+                <div class="ptitle">Fault Scenarios — Click to Inject</div>
+                <div class="scenario-grid" id="scenarioGrid"></div>
+            </div>
+
+            <div class="panel" style="overflow:hidden;min-height:0">
+                <div class="ptitle">Injection Log</div>
+                <div class="inj-log" id="injLog">
+                    <div style="text-align:center;color:var(--tdim);font-size:12px;padding:20px;font-weight:600">
+                        No injections yet
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- REPORT PAGE -->
+        <div class="page" id="pg-report">
+
+            <div class="report-header-row">
+                <button class="inj-btn primary" onclick="generateReport()" id="reportBtn">
+                    📄 Generate AUTOSAR Report
+                </button>
+                <div id="reportStatus" style="font-size:12px;font-weight:600;color:var(--sdim)"></div>
+            </div>
+
+            <div class="panel" style="overflow:hidden;min-height:0;grid-column:1/-1">
+                <div class="ptitle">AUTOSAR Software Component (SWC) Architecture</div>
+                <div style="overflow:auto;max-height:calc(100% - 24px)">
+                    <table class="swc-table">
+                        <tr>
+                            <th>SWC NAME</th>
+                            <th>TYPE</th>
+                            <th>BUS</th>
+                            <th>CYCLE</th>
+                            <th>INPUTS</th>
+                            <th>OUTPUTS</th>
+                        </tr>
+                        <tr>
+                            <td><strong>EngineECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-can">CAN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
+                            <td>
+                                <div class="io-in">DriveCycle.RPM</div>
+                                <div class="io-in">DriveCycle.Speed</div>
+                            </td>
+                            <td>
+                                <div class="io-out">CAN[0x100]: RPM,Speed</div>
+                                <div class="io-out">CAN[0x101]: Temp,Throttle</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>ABSECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-can">CAN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
+                            <td>
+                                <div class="io-in">DriveCycle.Speed</div>
+                                <div class="io-in">DriveCycle.Brake</div>
+                            </td>
+                            <td>
+                                <div class="io-out">CAN[0x200]: WheelSpeeds</div>
+                                <div class="io-out">CAN[0x201]: Brake</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>AirbagECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-can">CAN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
+                            <td>
+                                <div class="io-in">AccelerometerSensor</div>
+                                <div class="io-in">CAN[0x201]: Brake</div>
+                            </td>
+                            <td>
+                                <div class="io-out">CAN[0x300]: CrashStatus</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>TransmissionECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-can">CAN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
+                            <td>
+                                <div class="io-in">DriveCycle.Speed</div>
+                                <div class="io-in">DriveCycle.RPM</div>
+                            </td>
+                            <td>
+                                <div class="io-out">CAN[0x400]: Gear,Mode</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>BMSECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-can">CAN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
+                            <td>
+                                <div class="io-in">HVBatterySensors</div>
+                                <div class="io-in">DriveCycle.Phase</div>
+                            </td>
+                            <td>
+                                <div class="io-out">CAN[0x500]: SOC,Voltage</div>
+                                <div class="io-out">CAN[0x501]: Temperature</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>MotorECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-can">CAN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
+                            <td>
+                                <div class="io-in">CAN[0x500]: SOC</div>
+                                <div class="io-in">CAN[0x100]: Speed</div>
+                            </td>
+                            <td>
+                                <div class="io-out">CAN[0x600]: RPM,Torque</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>HybridControlECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
+                            <td><span class="bus-tag bus-can">CAN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">50ms</td>
+                            <td>
+                                <div class="io-in">CAN[0x100,0x500,0x600]</div>
+                            </td>
+                            <td>
+                                <div class="io-out">CAN[0x800]: HybridMode</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>RegenBrakeECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-can">CAN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
+                            <td>
+                                <div class="io-in">CAN[0x201,0x600]</div>
+                            </td>
+                            <td>
+                                <div class="io-out">CAN[0x900]: RegenPower</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>TPMSECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-lin">LIN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">1000ms</td>
+                            <td>
+                                <div class="io-in">TyrePressureSensors×4</div>
+                            </td>
+                            <td>
+                                <div class="io-out">LIN[0x10]: Pressures</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>WindowSeatECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                            <td><span class="bus-tag bus-lin">LIN</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">1000ms</td>
+                            <td>
+                                <div class="io-in">WindowSwitches</div>
+                                <div class="io-in">RainSensor</div>
+                            </td>
+                            <td>
+                                <div class="io-out">LIN[0x20]: Positions</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>GatewayECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
+                            <td><span class="bus-tag bus-mix">CAN+LIN+ETH</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
+                            <td>
+                                <div class="io-in">All CAN Messages</div>
+                                <div class="io-in">All LIN Frames</div>
+                            </td>
+                            <td>
+                                <div class="io-out">ETH: VehicleState</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>ADASECU</strong></td>
+                            <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
+                            <td><span class="bus-tag bus-eth">Ethernet</span></td>
+                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
+                            <td>
+                                <div class="io-in">ETH: VehicleState</div>
+                            </td>
+                            <td>
+                                <div class="io-out">ETH: ADASDecisions</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ADAS Bar -->
+        <div class="adas-bar">
+            <span class="adas-label">ADAS</span>
+            <span class="adas-pill" id="a_collision">COLLISION</span>
+            <span class="adas-pill" id="a_brake">EMERGENCY BRAKE</span>
+            <span class="adas-pill" id="a_overspeed">OVERSPEED</span>
+            <span class="adas-pill" id="a_overheat">OVERHEAT</span>
+            <span class="adas-pill" id="a_battery">BATTERY</span>
+            <span class="adas-pill" id="a_tyre">TYRE</span>
+            <span class="adas-pill" id="a_airbag">AIRBAG</span>
+            <span class="adas-pill" id="a_regen">REGEN AVAIL</span>
+        </div>
+
+    </div>
+
+    <script>
+        // ── Tab switching ──────────────────────────────────────────────
+        function switchTab(name) {
+            document.querySelectorAll('.tab').forEach((t, i) => {
+                const names = ['main', 'logger', 'injector', 'report'];
+                t.classList.toggle('active', names[i] === name);
+            });
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.toggle('active', p.id === 'pg-' + name);
+            });
+        }
+
+        // ── Clock ─────────────────────────────────────────────────────
+        setInterval(() => {
+            document.getElementById('clock').textContent =
+                new Date().toTimeString().slice(0, 8);
+        }, 1000);
+
+        // ── Gauge Drawing ──────────────────────────────────────────────
+        function drawGauge(id, value, max, label, unit, color, big = false) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width, H = canvas.height;
+            const cx = W / 2, cy = H / 2 + (big ? 8 : 4);
+            const R = W * (big ? 0.38 : 0.36);
+            const S = Math.PI * 0.75, E = Math.PI * 2.25;
+            const pct = Math.min(1, Math.max(0, value / max));
+            ctx.clearRect(0, 0, W, H);
+            ctx.beginPath(); ctx.arc(cx, cy, R, S, E);
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = big ? 12 : 9;
+            ctx.lineCap = 'round'; ctx.stroke();
+            if (pct > 0) {
+                const g = ctx.createLinearGradient(cx - R, cy, cx + R, cy);
+                g.addColorStop(0, color); g.addColorStop(1, color + 'aa');
+                ctx.beginPath(); ctx.arc(cx, cy, R, S, S + pct * (E - S));
+                ctx.strokeStyle = g; ctx.lineWidth = big ? 12 : 9;
+                ctx.lineCap = 'round'; ctx.stroke();
+            }
+            const ticks = big ? 11 : 7;
+            for (let i = 0; i <= ticks; i++) {
+                const a = S + (i / ticks) * (E - S);
+                const r1 = R + 4, r2 = R + (i % Math.ceil(ticks / 2) === 0 ? 13 : 7);
+                ctx.beginPath();
+                ctx.moveTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a));
+                ctx.lineTo(cx + r2 * Math.cos(a), cy + r2 * Math.sin(a));
+                ctx.strokeStyle = i % Math.ceil(ticks / 2) === 0 ? '#94a3b8' : '#cbd5e1';
+                ctx.lineWidth = i % Math.ceil(ticks / 2) === 0 ? 2 : 1; ctx.stroke();
+            }
+            const na = S + pct * (E - S);
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(na);
+            ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(R * 0.70, 0);
+            ctx.strokeStyle = '#334155'; ctx.lineWidth = big ? 2.5 : 2;
+            ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
+            ctx.beginPath(); ctx.arc(cx, cy, big ? 7 : 5, 0, Math.PI * 2);
+            ctx.fillStyle = color; ctx.fill();
+            ctx.font = `bold ${big ? '26px' : '18px'} 'JetBrains Mono',monospace`;
+            ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center';
+            ctx.fillText(Math.round(value), cx, cy + (big ? 34 : 26));
+            ctx.font = `700 ${big ? '9px' : '8px'} Inter,sans-serif`;
+            ctx.fillStyle = color;
+            ctx.fillText(label, cx, cy + (big ? 50 : 39));
+            ctx.font = `${big ? '8px' : '7px'} Inter,sans-serif`;
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText(unit, cx, cy + (big ? 62 : 50));
+        }
+
+        function drawBusLoadRing(pct) {
+            const canvas = document.getElementById('busLoadRing');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const cx = 50, cy = 50, R = 38;
+            ctx.clearRect(0, 0, 100, 100);
+            ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 8; ctx.stroke();
+            const end = -Math.PI / 2 + (pct / 100) * Math.PI * 2;
+            ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, end);
+            const color = pct > 70 ? '#dc2626' : pct > 40 ? '#d97706' : '#2563eb';
+            ctx.strokeStyle = color; ctx.lineWidth = 8;
+            ctx.lineCap = 'round'; ctx.stroke();
+            ctx.font = 'bold 18px JetBrains Mono,monospace';
+            ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(pct.toFixed(0) + '%', cx, cy);
+        }
+
+        // ── Charts ────────────────────────────────────────────────────
+        const MAX_PTS = 60;
+        function makeChart(id, color, yMax) {
+            const ctx = document.getElementById(id).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(MAX_PTS).fill(''),
+                    datasets: [{
+                        data: Array(MAX_PTS).fill(0), borderColor: color,
+                        borderWidth: 1.5, fill: true, backgroundColor: color + '18',
+                        tension: 0.4, pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 0 }, plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            min: 0, max: yMax,
+                            grid: { color: 'rgba(203,213,225,0.6)', lineWidth: 1 },
+                            ticks: { color: '#64748b', font: { size: 9, family: 'Inter' }, maxTicksLimit: 4 },
+                            border: { color: '#e2e8f0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        const busLoadChart = new Chart(
+            document.getElementById('busLoadChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: Array(60).fill(''),
+                datasets: [{
+                    data: Array(60).fill(0), borderColor: '#2563eb',
+                    borderWidth: 1.5, fill: true, backgroundColor: '#2563eb18',
+                    tension: 0.4, pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                animation: { duration: 0 }, plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: {
+                        min: 0, max: 100,
+                        grid: { color: 'rgba(203,213,225,0.6)' },
+                        ticks: { color: '#64748b', font: { size: 9 } },
+                        border: { color: '#e2e8f0' }
+                    }
+                }
+            }
+        });
+
+        const charts = {
+            speed: makeChart('speedChart', '#2563eb', 140),
+            rpm: makeChart('rpmChart', '#0891b2', 5000),
+            soc: makeChart('socChart', '#059669', 100),
+            temp: makeChart('tempChart', '#d97706', 110),
+        };
+
+        function pushChart(c, v) {
+            c.data.datasets[0].data.push(v);
+            c.data.labels.push('');
+            if (c.data.datasets[0].data.length > MAX_PTS) {
+                c.data.datasets[0].data.shift();
+                c.data.labels.shift();
+            }
+            c.update('none');
+        }
+
+        // ── ECU Boot List ─────────────────────────────────────────────
+        const ECU_LIST = ['BMS', 'ENGINE', 'ABS', 'AIRBAG', 'TRANSMISSION',
+            'MOTOR', 'HYBRID_CTRL', 'REGEN_BRAKE', 'TPMS','WINDOW_SEAT', 'GATEWAY', 'ADAS'];
+        const ecuBootList = document.getElementById('ecuBootList');
+        ECU_LIST.forEach(ecu => {
+            const row = document.createElement('div');
+            row.className = 'ecu-row';
+            row.innerHTML = `<span class="ecu-name">${ecu}</span>
+    <div class="ecu-dot" id="ecu_${ecu}"></div>`;
+            ecuBootList.appendChild(row);
+        });
+
+        // Smooth gauge animation
+        let currentGauges = { speed: 0, rpm: 0, temp: 25 };
+        let targetGauges = { speed: 0, rpm: 0, temp: 25 };
+
+        function animateGauges() {
+            const lerp = (c, t, factor) => c + (t - c) * factor;
+            currentGauges.speed = lerp(currentGauges.speed, targetGauges.speed, 0.1);
+            currentGauges.rpm = lerp(currentGauges.rpm, targetGauges.rpm, 0.1);
+            currentGauges.temp = lerp(currentGauges.temp, targetGauges.temp, 0.1);
+
+            drawGauge('speedGauge', currentGauges.speed, 140, 'SPEED', 'km/h', '#2563eb', true);
+            drawGauge('rpmGauge', currentGauges.rpm, 5000, 'RPM', 'rpm', '#0891b2');
+            drawGauge('tempGauge', currentGauges.temp, 110, 'TEMP', '°C', '#d97706');
+
+            requestAnimationFrame(animateGauges);
+        }
+        requestAnimationFrame(animateGauges);
+        drawBusLoadRing(0);
+
+        // ── Scenario Grid ─────────────────────────────────────────────
+        const SCENARIOS_LOCAL = {
+            battery_failure: { name: 'HV Battery Failure', desc: 'Complete HV battery pack failure', dtcs: ['P0A80', 'P1A00', 'P1A05'] },
+            engine_overheat: { name: 'Engine Overheating', desc: 'Coolant system failure simulation', dtcs: ['P0217'] },
+            abs_failure: { name: 'ABS System Failure', desc: 'All wheel speed sensor failures', dtcs: ['C0035', 'C0040', 'C0045', 'C0050'] },
+            tyre_blowout: { name: 'Tyre Blowout', desc: 'Front-left tyre sudden blowout', dtcs: ['C0750', 'C0775'] },
+            crash_event: { name: 'Collision Event', desc: 'Frontal collision + airbag deploy', dtcs: ['B0001', 'B0002'] },
+            can_bus_fault: { name: 'CAN Bus Fault', desc: 'Network communication failure', dtcs: ['U0001', 'U0100'] },
+            motor_failure: { name: 'Motor Failure', desc: 'Electric motor system fault', dtcs: ['P0A00', 'P0A0F'] },
+            full_emergency: { name: 'Full Emergency', desc: 'Complete vehicle emergency', dtcs: ['P0217', 'B0001', 'P1A00'] },
+        };
+
+        const scenarioGrid = document.getElementById('scenarioGrid');
+        Object.entries(SCENARIOS_LOCAL).forEach(([key, sc]) => {
+            const card = document.createElement('div');
+            card.className = 'scenario-card'; card.id = 'sc_' + key;
+            const dtcHtml = sc.dtcs.map(d => `<span class="sc-dtc">${d}</span>`).join('');
+            card.innerHTML = `
+    <div class="sc-name">${sc.name}</div>
+    <div class="sc-desc">${sc.desc}</div>
+    <div class="sc-dtcs">${dtcHtml}</div>`;
+            card.onclick = () => injectScenario(key);
+            scenarioGrid.appendChild(card);
+        });
+
+        // ── Fault Injection Functions ─────────────────────────────────
+        function injectManualDTC() {
+            const code = document.getElementById('dtcInputField').value.trim().toUpperCase();
+            if (!code) { return; }
+            fetch('/api/inject_fault', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code })
+            }).then(r => r.json()).then(d => {
+                document.getElementById('dtcInputField').value = '';
+                addInjLog('DTC', code, 'Manual injection: ' + code);
+            });
+        }
+
+        function injectScenario(key) {
+            document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+            document.getElementById('sc_' + key)?.classList.add('active');
+            fetch('/api/inject_scenario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scenario: key })
+            }).then(r => r.json()).then(d => {
+                const sc = SCENARIOS_LOCAL[key];
+                addInjLog('SCENARIO', sc.name, sc.desc);
+            });
+        }
+
+        function resetAllFaults() {
+            fetch('/api/reset_scenario', { method: 'POST' })
+                .then(r => r.json()).then(() => {
+                    document.querySelectorAll('.scenario-card')
+                        .forEach(c => c.classList.remove('active'));
+                    document.getElementById('activeScenario').textContent = 'NONE';
+                    addInjLog('RESET', 'All Faults', 'System reset complete');
+                });
+        }
+
+        function addInjLog(type, name, desc) {
+            const log = document.getElementById('injLog');
+            const empty = log.querySelector('div[style]');
+            if (empty) empty.remove();
+            const item = document.createElement('div');
+            item.className = 'inj-log-item' + (type === 'SCENARIO' ? ' scenario' : '');
+            item.innerHTML = `
+    <div class="inj-log-type">${type}</div>
+    <div class="inj-log-name">${name}</div>
+    <div class="inj-log-time">${new Date().toTimeString().slice(0, 8)} — ${desc}</div>`;
+            log.insertBefore(item, log.firstChild);
+        }
+
+        // ── Report Generator ──────────────────────────────────────────
+        function generateReport() {
+            const btn = document.getElementById('reportBtn');
+            const status = document.getElementById('reportStatus');
+            btn.textContent = '⏳ Generating...';
+            btn.disabled = true;
+            status.textContent = '';
+            fetch('/api/generate_report', { method: 'POST' })
+                .then(r => r.json()).then(d => {
+                    if (d.status === 'ok') {
+                        status.innerHTML = `<span style="color:var(--blue);font-weight:700">⏳ Downloading PDF...</span>`;
+
+                        // Fetch the HTML content
+                        fetch('/api/download_report/' + d.fname)
+                            .then(res => res.text())
+                            .then(html => {
+                                const opt = {
+                                    margin: 0,
+                                    filename: d.fname.replace('.html', '.pdf'),
+                                    image: { type: 'jpeg', quality: 0.98 },
+                                    html2canvas: { scale: 2, windowWidth: 800 },
+                                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+                                    pagebreak: { mode: 'css', avoid: '.section' }
+                                };
+
+                                const iframe = document.createElement('iframe');
+                                iframe.style.position = 'fixed';
+                                iframe.style.right = '-10000px';
+                                iframe.style.width = '800px';
+                                iframe.style.height = '3000px'; // ensure enough height for render
+                                document.body.appendChild(iframe);
+
+                                iframe.contentDocument.open();
+                                iframe.contentDocument.write(html);
+                                iframe.contentDocument.close();
+
+                                setTimeout(() => {
+                                    html2pdf().set(opt).from(iframe.contentDocument.documentElement).save().then(() => {
+                                        btn.textContent = '📄 Generate AUTOSAR Report';
+                                        btn.disabled = false;
+                                        status.innerHTML = `<span style="color:var(--green);font-weight:700">✓ PDF saved directly to your local system!</span>`;
+                                        setTimeout(() => document.body.removeChild(iframe), 1000);
+                                    });
+                                }, 500);
+                            });
+                    } else {
+                        btn.textContent = '📄 Generate AUTOSAR Report';
+                        btn.disabled = false;
+                        status.innerHTML = `<span style="color:var(--red)">
+          ✗ Error: ${d.msg}</span>`;
+                    }
+                });
+        }
+
+        // ── SocketIO ──────────────────────────────────────────────────
+        const socket = io();
+
+        socket.on('vehicle_update', function (data) {
+            const s = data.state || {};
+            const d = data.decisions || {};
+            const dtcs = data.dtcs || [];
+            const ls = data.log_stats || {};
+            const il = data.injection_log || [];
+            const as = data.active_scenario;
+
+            const speed = s.vehicle_speed || 0;
+            const rpm = s.engine_rpm || 0;
+            const soc = s.battery_soc || 75;
+            const temp = s.engine_temp || 25;
+
+            // Gauges
+            targetGauges.speed = speed;
+            targetGauges.rpm = rpm;
+            targetGauges.temp = temp;
+
+            // Charts
+            pushChart(charts.speed, speed);
+            pushChart(charts.rpm, rpm);
+            pushChart(charts.soc, soc);
+            pushChart(charts.temp, temp);
+
+            // Battery
+            document.getElementById('socVal').textContent = Math.round(soc) + '%';
+            document.getElementById('socBar').style.width = soc + '%';
+            document.getElementById('socBar').style.background =
+                soc < 20 ? '#dc2626' : soc < 40 ? '#d97706' : 'linear-gradient(90deg,#2563eb,#0891b2)';
+
+            // Hybrid
+            const hmode = s.hybrid_mode || '--';
+            const hmc = { EV: '#059669', HV: '#d97706', BOOST: '#dc2626', REGEN: '#059669', IDLE: '#94a3b8' };
+            document.getElementById('hybridMode').textContent = hmode;
+            document.getElementById('hybridMode').style.color = hmc[hmode] || '#94a3b8';
+            document.getElementById('phaseBadge').textContent = '● ' + hmode;
+            document.getElementById('gearDisp').textContent = s.current_gear || '1';
+            document.getElementById('driveModeDisp').textContent = s.drive_mode || 'D';
+
+            const setDot = (id, on) => { document.getElementById(id).className = 'h-dot' + (on ? ' on' : ''); };
+            setDot('engineDot', s.engine_active);
+            setDot('motorDot', s.motor_active);
+            setDot('regenDot', s.regen_active);
+            document.getElementById('engineVal').textContent = s.engine_active ? 'ON' : 'OFF';
+            document.getElementById('motorVal').textContent = s.motor_active ? 'ON' : 'OFF';
+            document.getElementById('regenVal').textContent = (s.regen_power || 0).toFixed(1) + 'kW';
+            document.getElementById('battVal').textContent = Math.round(soc) + '%';
+            const bd = document.getElementById('battDot');
+            bd.style.background = soc < 20 ? '#dc2626' : soc < 40 ? '#d97706' : '#059669';
+
+            // Telemetry
+            const fmt = (v, dec = 1) => typeof v === 'number' ? v.toFixed(dec) : (v || '--');
+            document.getElementById('s_torque').textContent = fmt(s.motor_torque);
+            document.getElementById('s_brake').textContent = fmt(s.brake_pressure, 0);
+            document.getElementById('s_impact').textContent = fmt(s.impact_force);
+            document.getElementById('s_voltage').textContent = fmt(s.battery_voltage, 0);
+            document.getElementById('s_mmode').textContent = s.motor_mode || '--';
+            document.getElementById('s_energy').textContent = fmt(s.energy_recovered, 0);
+
+            // Tyres
+            [['tfl', 'tflVal', s.tyre_pressure_fl],
+            ['tfr', 'tfrVal', s.tyre_pressure_fr],
+            ['trl', 'trlVal', s.tyre_pressure_rl],
+            ['trr', 'trrVal', s.tyre_pressure_rr]
+            ].forEach(([cid, vid, val]) => {
+                if (val !== undefined) {
+                    document.getElementById(vid).textContent = val.toFixed(1);
+                    document.getElementById(cid).className = 'tyre-cell' + (val < 28 ? ' warn' : '');
+                }
+            });
+
+            // Ignition + ECU boot
+            const ign = s.ignition_state || '--';
+            const ignEl = document.getElementById('ignBadge');
+            ignEl.textContent = '● ' + ign;
+            ignEl.className = 'ign-badge' + (ign === 'RUNNING' ? ' running' : '');
+            const ecuStatus = s.ecu_status || {};
+            ECU_LIST.forEach(ecu => {
+                const dot = document.getElementById('ecu_' + ecu);
+                if (dot) dot.className = 'ecu-dot' + (ecuStatus[ecu] ? ' online' : '');
+            });
+
+            // Fault counters
+            document.getElementById('critCount').textContent = `⬤ ${data.critical || 0} CRITICAL`;
+            document.getElementById('warnCount').textContent = `⬤ ${data.warnings || 0} WARNINGS`;
+
+            // DTC Panel
+            const panel = document.getElementById('dtcPanel');
+            const empty = document.getElementById('dtcEmpty');
+            if (dtcs.length === 0) {
+                empty.style.display = 'block';
+                panel.querySelectorAll('.dtc-item').forEach(el => el.remove());
+            } else {
+                empty.style.display = 'none';
+                const existing = new Set([...panel.querySelectorAll('.dtc-item')].map(el => el.dataset.code));
+                dtcs.forEach(dtc => {
+                    if (!existing.has(dtc.code)) {
+                        const el = document.createElement('div');
+                        el.className = `dtc-item ${dtc.severity}`;
+                        el.dataset.code = dtc.code;
+                        el.innerHTML = `<div class="dtc-code">${dtc.code} — ${dtc.system}</div>
+          <div class="dtc-desc">${dtc.desc}</div>
+          <div class="dtc-time">⏱ ${dtc.timestamp} · #${dtc.count}</div>`;
+                        panel.appendChild(el);
+                    } else {
+                        const el = panel.querySelector(`[data-code="${dtc.code}"]`);
+                        if (el) el.querySelector('.dtc-time').textContent = `⏱ ${dtc.timestamp} · #${dtc.count}`;
+                    }
+                });
+            }
+
+            // ADAS pills
+            [['a_collision', d.collision_warning, false],
+            ['a_brake', d.emergency_brake, false],
+            ['a_overspeed', d.overspeed_warning, false],
+            ['a_overheat', d.engine_overheat, false],
+            ['a_battery', d.battery_critical, false],
+            ['a_tyre', d.tyre_warning, false],
+            ['a_airbag', d.airbag_alert, false],
+            ['a_regen', d.regen_suggestion, true],
+            ].forEach(([id, active, green]) => {
+                document.getElementById(id).className =
+                    'adas-pill' + (active ? (green ? ' active-green' : ' active') : '');
+            });
+
+            // ── CAN Logger updates ─────────────────────────────────────
+            if (ls.total_msgs !== undefined) {
+                document.getElementById('lg_total').textContent =
+                    ls.total_msgs.toLocaleString();
+                document.getElementById('lg_rate').textContent =
+                    ls.msgs_per_sec || 0;
+                document.getElementById('lg_errors').textContent =
+                    ls.total_errors || 0;
+                document.getElementById('lg_file').textContent =
+                    ls.log_file ? ls.log_file.split('\\').pop().split('/').pop() : '--';
+
+                drawBusLoadRing(ls.bus_load_pct || 0);
+
+                // Bus load history chart
+                if (ls.bus_load_history && ls.bus_load_history.length) {
+                    const hist = ls.bus_load_history;
+                    busLoadChart.data.datasets[0].data = hist;
+                    busLoadChart.data.labels = Array(hist.length).fill('');
+                    busLoadChart.update('none');
+                }
+
+                // ECU bar list
+                const ecuBars = document.getElementById('ecuBarList');
+                ecuBars.innerHTML = '';
+                const counts = ls.ecu_counts || {};
+                const total = Math.max(1, ls.total_msgs || 1);
+                Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([ecu, cnt]) => {
+                    const pct = Math.min(100, (cnt / total) * 200);
+                    ecuBars.innerHTML += `
+        <div class="ecu-bar-row">
+          <div class="ecu-bar-name">${ecu}</div>
+          <div class="ecu-bar-bg"><div class="ecu-bar-fill" style="width:${pct}%"></div></div>
+          <div class="ecu-bar-count">${cnt.toLocaleString()}</div>
+        </div>`;
+                });
+
+                // Top IDs
+                const topIds = document.getElementById('topIdList');
+                topIds.innerHTML = '';
+                (ls.top_ids || []).forEach(item => {
+                    topIds.innerHTML += `
+        <div class="top-id-row">
+          <span class="top-id-hex">${item.id}</span>
+          <span class="top-id-ecu">${item.ecu}</span>
+          <span class="top-id-cnt">${item.count.toLocaleString()}</span>
+        </div>`;
+                });
+            }
+
+            // Active scenario
+            if (as) {
+                document.getElementById('activeScenario').textContent = as.toUpperCase();
+                document.querySelectorAll('.scenario-card').forEach(c => {
+                    c.classList.toggle('active', c.id === 'sc_' + as);
+                });
+            } else {
+                document.getElementById('activeScenario').textContent = 'NONE';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,407 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@400;600;700;900&display=swap');
+
+:root {
+  --bg:       #080c14;
+  --bg2:      #0d1220;
+  --bg3:      #111827;
+  --bg4:      #1a2035;
+  --border:   #1e2d45;
+  --border2:  #243352;
+  --blue:     #3b82f6;
+  --blue2:    #60a5fa;
+  --cyan:     #06b6d4;
+  --green:    #10b981;
+  --amber:    #f59e0b;
+  --red:      #ef4444;
+  --purple:   #8b5cf6;
+  --text:     #e2e8f0;
+  --text-dim: #64748b;
+  --text-mid: #94a3b8;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  height:100vh;
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:58px 1fr 48px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+
+/* ══════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════ */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 2px 20px rgba(0,0,0,.4);
+  z-index:100;
+}
+
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:900;color:#fff;letter-spacing:-1px;
+  box-shadow:0 0 16px rgba(59,130,246,.4);
+}
+.logo-name{font-size:17px;font-weight:800;color:#fff;letter-spacing:2px;}
+.logo-sub{font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:1px;}
+
+.header-center{display:flex;align-items:center;gap:8px;}
+
+.badge{
+  padding:4px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text-mid);
+  transition:all .4s;white-space:nowrap;
+}
+.badge.green{border-color:var(--green);color:var(--green);background:rgba(16,185,129,.08);}
+.badge.red{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08);animation:blink 1s infinite;}
+.badge.amber{border-color:var(--amber);color:var(--amber);background:rgba(245,158,11,.08);}
+.badge.blue{border-color:var(--blue);color:var(--blue);background:rgba(59,130,246,.08);}
+.badge.purple{border-color:var(--purple);color:var(--purple);background:rgba(139,92,246,.08);}
+.badge.cyan{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.08);}
+
+.header-right{display:flex;align-items:center;gap:10px;}
+.clock{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-mid);}
+.uptime{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);transition:all .3s;}
+.conn-dot.connected{background:var(--green);box-shadow:0 0 8px var(--green);}
+
+/* ══════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════ */
+.tab-bar{
+  display:flex;gap:2px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:0 16px;
+}
+.tab-btn{
+  padding:8px 18px;
+  font-size:11px;font-weight:700;letter-spacing:.8px;
+  color:var(--text-dim);
+  background:transparent;
+  border:none;border-bottom:2px solid transparent;
+  cursor:pointer;transition:all .2s;
+  white-space:nowrap;
+}
+.tab-btn:hover{color:var(--text-mid);}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+.tab-content{display:none;overflow:auto;height:100%;padding:10px 12px;}
+.tab-content.active{display:grid;}
+
+/* ══════════════════════════════════════════════════════
+   CARD / PANEL
+══════════════════════════════════════════════════════ */
+.card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:12px 14px;
+  position:relative;
+  overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  border-radius:10px 10px 0 0;
+}
+.card.green::before{background:linear-gradient(90deg,var(--green),var(--cyan));}
+.card.amber::before{background:linear-gradient(90deg,var(--amber),var(--red));}
+.card.purple::before{background:linear-gradient(90deg,var(--purple),var(--blue));}
+
+.card-title{
+  font-size:10px;font-weight:700;letter-spacing:1.2px;
+  color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;
+}
+.card-title span{color:var(--blue);margin-right:5px;}
+
+/* ══════════════════════════════════════════════════════
+   TAB 1 — DRIVE
+══════════════════════════════════════════════════════ */
+#tab-drive{
+  grid-template-columns:260px 1fr 220px;
+  grid-template-rows:1fr 1fr;
+  gap:8px;
+}
+
+/* Gauges */
+.gauge-svg-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;}
+.gauge-val{
+  font-family:'Orbitron',monospace;
+  font-size:36px;font-weight:700;
+  color:#fff;text-align:center;line-height:1;
+  margin-top:-10px;
+}
+.gauge-unit{font-size:11px;color:var(--text-dim);text-align:center;letter-spacing:1px;margin-top:2px;}
+.gauge-label{font-size:9px;color:var(--blue);font-weight:700;letter-spacing:1.5px;text-align:center;margin-top:4px;}
+
+/* Power Flow */
+.power-flow{display:flex;flex-direction:column;gap:8px;height:100%;}
+.pf-row{display:flex;align-items:center;gap:8px;}
+.pf-node{
+  flex:1;padding:10px;border-radius:8px;
+  background:var(--bg3);border:1px solid var(--border);
+  text-align:center;position:relative;
+}
+.pf-node-name{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:1px;}
+.pf-node-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--blue);margin-top:2px;}
+.pf-arrow{font-size:16px;color:var(--text-dim);transition:color .3s;}
+.pf-arrow.active-fwd{color:var(--green);}
+.pf-arrow.active-rev{color:var(--cyan);transform:scaleX(-1);}
+.pf-label{font-size:9px;color:var(--text-dim);letter-spacing:.8px;}
+
+/* Mini stat rows */
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);margin-bottom:4px;}
+.stat-key{font-size:11px;font-weight:600;color:var(--text-mid);}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);}
+.stat-val.green{color:var(--green);}
+.stat-val.amber{color:var(--amber);}
+.stat-val.red{color:var(--red);}
+
+/* Progress bars */
+.prog-wrap{margin-bottom:6px;}
+.prog-label{display:flex;justify-content:space-between;margin-bottom:3px;}
+.prog-label span{font-size:10px;font-weight:600;color:var(--text-dim);}
+.prog-label .prog-num{font-family:'JetBrains Mono',monospace;color:var(--blue);font-weight:700;}
+.prog-bg{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+.prog-fill.blue{background:linear-gradient(90deg,var(--blue),var(--cyan));}
+.prog-fill.green{background:linear-gradient(90deg,var(--green),#34d399);}
+.prog-fill.amber{background:linear-gradient(90deg,var(--amber),#fbbf24);}
+.prog-fill.red{background:linear-gradient(90deg,var(--red),#f87171);}
+
+/* Gear display */
+.gear-display{
+  font-family:'Orbitron',monospace;font-size:64px;font-weight:900;
+  color:var(--amber);text-align:center;line-height:1;
+  text-shadow:0 0 30px rgba(245,158,11,.4);
+}
+.drive-mode-disp{
+  font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;
+  color:var(--text-mid);text-align:center;
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB 2 — ECU NETWORK
+══════════════════════════════════════════════════════ */
+#tab-network{
+  grid-template-columns:1fr 260px;
+  grid-template-rows:1fr 1fr;
+  gap:8px;
+}
+.ecu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;}
+.ecu-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:10px 8px;text-align:center;transition:all .3s;
+}
+.ecu-card.online{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04);}
+.ecu-card.offline{border-color:rgba(239,68,68,.2);opacity:.6;}
+.ecu-card-name{font-size:10px;font-weight:700;color:var(--text-mid);letter-spacing:.8px;}
+.ecu-status-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--text-dim);margin:6px auto 4px;transition:all .4s;
+}
+.ecu-status-dot.online{background:var(--green);box-shadow:0 0 8px var(--green);}
+.ecu-status-dot.offline{background:var(--red);}
+.ecu-bus-tag{font-size:9px;color:var(--text-dim);letter-spacing:.5px;}
+
+.bus-meter{margin-bottom:8px;}
+.bus-meter-label{font-size:10px;font-weight:700;color:var(--text-dim);margin-bottom:4px;display:flex;justify-content:space-between;}
+.bus-meter-bar{height:8px;background:var(--bg4);border-radius:4px;overflow:hidden;}
+.bus-meter-fill{height:100%;border-radius:4px;transition:width 1s;}
+
+/* ══════════════════════════════════════════════════════
+   TAB 3 — BATTERY & HYBRID
+══════════════════════════════════════════════════════ */
+#tab-battery{
+  grid-template-columns:240px 1fr 1fr;
+  grid-template-rows:1fr 1fr;
+  gap:8px;
+}
+.soc-big{
+  font-family:'Orbitron',monospace;font-size:48px;font-weight:900;
+  text-align:center;color:var(--green);
+  text-shadow:0 0 30px rgba(16,185,129,.4);
+  margin:10px 0 4px;
+}
+.soc-label{font-size:11px;color:var(--text-dim);text-align:center;letter-spacing:1px;}
+
+/* Energy flow nodes */
+.energy-flow{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;}
+.ef-node{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:8px;text-align:center;
+}
+.ef-name{font-size:9px;font-weight:700;color:var(--text-dim);letter-spacing:1px;}
+.ef-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;margin-top:2px;}
+.ef-arrow{font-size:20px;text-align:center;color:var(--text-dim);}
+.ef-arrow.fwd{color:var(--green);}
+.ef-arrow.rev{color:var(--cyan);}
+
+/* ══════════════════════════════════════════════════════
+   TAB 4 — TPMS & CHASSIS
+══════════════════════════════════════════════════════ */
+#tab-tpms{
+  grid-template-columns:1fr 1fr 200px;
+  grid-template-rows:1fr 1fr;
+  gap:8px;
+}
+.tyre-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:10px;text-align:center;transition:all .4s;
+}
+.tyre-card.warn{border-color:var(--red);background:rgba(239,68,68,.06);}
+.tyre-pos-label{font-size:10px;font-weight:700;color:var(--text-dim);letter-spacing:1px;}
+.tyre-psi{font-family:'Orbitron',monospace;font-size:24px;font-weight:700;color:var(--blue);margin:4px 0;}
+.tyre-psi.warn{color:var(--red);}
+.tyre-psi-unit{font-size:9px;color:var(--text-dim);}
+.tyre-speed{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-mid);margin-top:4px;}
+
+.vehicle-svg-wrap{display:flex;align-items:center;justify-content:center;padding:10px;}
+
+/* ══════════════════════════════════════════════════════
+   TAB 5 — DIAGNOSTICS
+══════════════════════════════════════════════════════ */
+#tab-diag{
+  grid-template-columns:1fr 320px;
+  grid-template-rows:auto 1fr;
+  gap:8px;
+}
+.diag-toolbar{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  grid-column:1/-1;
+}
+.filter-pill{
+  padding:5px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text-dim);
+  cursor:pointer;transition:all .2s;
+}
+.filter-pill.active-f{border-color:var(--blue);color:var(--blue);background:rgba(59,130,246,.1);}
+.filter-pill:hover{border-color:var(--text-dim);color:var(--text);}
+.diag-btn{
+  padding:5px 14px;border-radius:6px;
+  font-size:11px;font-weight:700;
+  border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text-mid);
+  cursor:pointer;transition:all .2s;margin-left:auto;
+}
+.diag-btn:hover{border-color:var(--blue);color:var(--blue);}
+.diag-btn.red-btn{border-color:rgba(239,68,68,.4);color:var(--red);}
+.diag-btn.red-btn:hover{background:rgba(239,68,68,.1);}
+
+.dtc-table{width:100%;border-collapse:collapse;}
+.dtc-table th{
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  color:var(--text-dim);text-align:left;
+  padding:6px 10px;border-bottom:1px solid var(--border);
+  background:var(--bg2);position:sticky;top:0;
+}
+.dtc-table td{
+  padding:7px 10px;font-size:12px;
+  border-bottom:1px solid var(--border);
+  transition:background .2s;
+}
+.dtc-table tr:hover td{background:var(--bg3);}
+.dtc-code-cell{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;}
+.dtc-code-cell.CRITICAL{color:var(--red);}
+.dtc-code-cell.WARNING{color:var(--amber);}
+.dtc-code-cell.INFO{color:var(--blue);}
+.sev-badge{
+  display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:10px;font-weight:700;
+}
+.sev-badge.CRITICAL{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+.sev-badge.WARNING{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
+.sev-badge.INFO{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3);}
+.dtc-clear-btn{
+  padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);
+  color:var(--red);cursor:pointer;transition:all .2s;
+}
+.dtc-clear-btn:hover{background:rgba(239,68,68,.25);}
+
+.adas-log{overflow-y:auto;max-height:100%;}
+.adas-log-item{
+  padding:6px 8px;border-radius:6px;margin-bottom:4px;
+  font-size:11px;border-left:3px solid var(--border2);
+  background:var(--bg3);color:var(--text-mid);
+  font-family:'JetBrains Mono',monospace;
+}
+.adas-log-item.alert{border-left-color:var(--red);color:var(--text);}
+.adas-log-item.warn{border-left-color:var(--amber);}
+.adas-log-item.info{border-left-color:var(--blue);}
+
+/* ══════════════════════════════════════════════════════
+   ADAS BAR
+══════════════════════════════════════════════════════ */
+.adas-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:0 14px;
+  background:var(--bg2);border-top:1px solid var(--border);
+  overflow:hidden;
+}
+.adas-label{
+  font-size:10px;font-weight:800;color:var(--text-mid);
+  letter-spacing:1.5px;white-space:nowrap;margin-right:4px;
+  border-right:1px solid var(--border2);padding-right:10px;
+}
+.adas-pill{
+  padding:3px 10px;border-radius:12px;
+  font-size:10px;font-weight:700;letter-spacing:.5px;
+  border:1px solid var(--border2);
+  background:var(--bg3);color:var(--text-dim);
+  transition:all .3s;white-space:nowrap;
+}
+.adas-pill.active{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.12);animation:blink .8s infinite;}
+.adas-pill.active-green{border-color:var(--green);color:var(--green);background:rgba(16,185,129,.1);}
+.adas-pill.active-amber{border-color:var(--amber);color:var(--amber);background:rgba(245,158,11,.1);}
+
+/* ══════════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════════ */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 6px rgba(59,130,246,.3)}50%{box-shadow:0 0 18px rgba(59,130,246,.7)}}
+@keyframes flow-fwd{0%{stroke-dashoffset:60}100%{stroke-dashoffset:0}}
+@keyframes flow-rev{0%{stroke-dashoffset:0}100%{stroke-dashoffset:60}}
+
+.flow-line{stroke-dasharray:8 4;stroke-dashoffset:0;}
+.flow-line.fwd{animation:flow-fwd 1s linear infinite;}
+.flow-line.rev{animation:flow-rev 1s linear infinite;}
+
+/* chart wrappers */
+.chart-wrap{position:relative;width:100%;height:100%;}
+.chart-wrap canvas{width:100%!important;}
+
+/* tall cards spanning rows */
+.row-span-2{grid-row:span 2;}
+.col-span-2{grid-column:span 2;}
+
+/* network topology SVG */
+.topo-svg{width:100%;height:100%;}
+.topo-node{cursor:pointer;transition:opacity .3s;}
+.topo-node rect{fill:var(--bg3);stroke:var(--border2);stroke-width:1.5;rx:6;}
+.topo-node text{fill:var(--text-mid);font-size:10px;font-family:'Inter',sans-serif;font-weight:600;}
+.topo-node.online rect{stroke:var(--green);}
+.topo-node.online text{fill:var(--green);}
+.topo-line{stroke:var(--border2);stroke-width:1.5;fill:none;}
+.topo-line.can{stroke:var(--blue);}
+.topo-line.lin{stroke:var(--amber);}
+.topo-line.eth{stroke:var(--purple);}

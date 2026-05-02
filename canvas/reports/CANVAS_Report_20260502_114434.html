@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CANVAS — AUTOSAR SWC Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#020818; color:#eaf4ff;
+    font-family:'Rajdhani',sans-serif;
+    padding:30px; line-height:1.5;
+  }
+  .header {
+    border-bottom:2px solid #0d2040;
+    padding-bottom:20px; margin-bottom:30px;
+    display:flex; justify-content:space-between;
+    align-items:flex-end;
+  }
+  .title {
+    font-family:'Orbitron',monospace;
+    font-size:24px; font-weight:700;
+    color:#00eeff; letter-spacing:4px;
+  }
+  .subtitle {
+    font-size:11px; color:#3a6a9c;
+    letter-spacing:3px; margin-top:4px;
+  }
+  .meta {
+    text-align:right; font-size:11px;
+    color:#4a6a8a; font-family:monospace;
+  }
+  .section {
+    margin-bottom:20px;
+    background:linear-gradient(135deg,
+      rgba(10,22,40,0.97),rgba(7,14,26,0.97));
+    border:1px solid #0d2040;
+    border-radius:10px; overflow:hidden;
+    page-break-inside: avoid;
+  }
+  .section-header {
+    background:rgba(0,180,255,0.05);
+    padding:12px 20px;
+    border-bottom:1px solid #0d2040;
+    font-family:'Orbitron',monospace;
+    font-size:10px; letter-spacing:3px;
+    color:#00b4ff;
+  }
+  .section-body { padding:20px; }
+  table {
+    width:100%; border-collapse:collapse;
+    font-size:12px;
+  }
+  th {
+    text-align:left; padding:8px 12px;
+    background:rgba(0,180,255,0.05);
+    color:#3a6a9c; font-family:monospace;
+    font-size:10px; letter-spacing:2px;
+    border-bottom:1px solid #0d2040;
+  }
+  td {
+    padding:8px 12px;
+    border-bottom:1px solid rgba(13,32,64,0.5);
+    vertical-align:top;
+  }
+  tr:hover td {
+    background:rgba(0,180,255,0.03);
+  }
+  .bus-badge {
+    padding:2px 8px; border-radius:10px;
+    border:1px solid; font-size:10px;
+    font-family:monospace; letter-spacing:1px;
+  }
+  .io-item {
+    font-size:10px; font-family:monospace;
+    padding:2px 0; color:#4a6a8a;
+  }
+  .io-item.in::before  { content:'← '; color:#00cc77; }
+  .io-item.out::before { content:'→ '; color:#00b4ff; }
+  .dtc-tag {
+    display:inline-block; margin:2px;
+    padding:1px 6px; border-radius:4px;
+    background:rgba(255,34,68,0.1);
+    border:1px solid rgba(255,34,68,0.3);
+    color:#ff2244; font-size:10px;
+    font-family:monospace;
+  }
+  .stat-grid {
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px; margin-bottom:20px;
+  }
+  .stat-card {
+    background:rgba(13,32,64,0.4);
+    border:1px solid #0d2040;
+    border-radius:8px; padding:12px;
+    text-align:center;
+  }
+  .stat-val {
+    font-family:'Orbitron',monospace;
+    font-size:22px; font-weight:700;
+    color:#00eeff;
+  }
+  .stat-lbl {
+    font-size:9px; color:#3a6a9c;
+    letter-spacing:2px; margin-top:4px;
+  }
+  .footer {
+    text-align:center; margin-top:30px;
+    padding-top:20px;
+    border-top:1px solid #0d2040;
+    color:#3a6a9c; font-size:11px;
+    font-family:monospace; letter-spacing:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="title">CANVAS</div>
+    <div class="subtitle">
+      AUTOSAR SOFTWARE COMPONENT ARCHITECTURE REPORT
+    </div>
+  </div>
+  <div class="meta">
+    Generated: 2026-05-02 11:44:34<br>
+    Vehicle: Hybrid Car Simulation<br>
+    Networks: CAN · LIN · Ethernet (DoIP)<br>
+    Total ECUs: 12
+  </div>
+</div>
+
+<!-- ── Summary Stats ── -->
+<div class="section">
+  <div class="section-header">
+    SYSTEM SUMMARY
+  </div>
+  <div class="section-body">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-val">
+          151
+        </div>
+        <div class="stat-lbl">TOTAL CAN MSGS</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val"
+             style="color:#00cc77">
+          0.3%
+        </div>
+        <div class="stat-lbl">BUS LOAD</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val"
+             style="color:#ff2244">
+          2
+        </div>
+        <div class="stat-lbl">ACTIVE DTCS</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">
+          18
+        </div>
+        <div class="stat-lbl">MSGS / SEC</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SWC Architecture ── -->
+<div class="section">
+  <div class="section-header">
+    AUTOSAR SOFTWARE COMPONENT (SWC) ARCHITECTURE
+  </div>
+  <div class="section-body">
+    <table>
+      <tr>
+        <th>SWC NAME</th>
+        <th>BUS</th>
+        <th>CYCLE</th>
+        <th>INPUTS (R-Ports)</th>
+        <th>OUTPUTS (P-Ports)</th>
+        <th>DTC CODES</th>
+      </tr>
+      
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    EngineECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00b4ff;
+                    color:#00b4ff">
+                    CAN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    10ms
+                </td>
+                <td><div class="io-item in">DriveCycle.RPM</div><div class="io-item in">DriveCycle.Speed</div><div class="io-item in">DriveCycle.Temp</div></td>
+                <td><div class="io-item out">CAN[0x100]: RPM, Speed</div><div class="io-item out">CAN[0x101]: Temp, Throttle</div></td>
+                <td><span class="dtc-tag">P0217</span><span class="dtc-tag">P0219</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    ABSECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00b4ff;
+                    color:#00b4ff">
+                    CAN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    10ms
+                </td>
+                <td><div class="io-item in">DriveCycle.Speed</div><div class="io-item in">DriveCycle.BrakePressure</div></td>
+                <td><div class="io-item out">CAN[0x200]: WheelSpeeds</div><div class="io-item out">CAN[0x201]: BrakePressure</div></td>
+                <td><span class="dtc-tag">C0035</span><span class="dtc-tag">C0040</span><span class="dtc-tag">C0045</span><span class="dtc-tag">C0050</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    AirbagECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00b4ff;
+                    color:#00b4ff">
+                    CAN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    20ms
+                </td>
+                <td><div class="io-item in">AccelerometerSensor</div><div class="io-item in">CAN[0x201]: BrakePressure</div></td>
+                <td><div class="io-item out">CAN[0x300]: CrashStatus</div><div class="io-item out">CAN[0x300]: DeploymentFlag</div></td>
+                <td><span class="dtc-tag">B0001</span><span class="dtc-tag">B0002</span><span class="dtc-tag">B0051</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    TransmissionECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00b4ff;
+                    color:#00b4ff">
+                    CAN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    20ms
+                </td>
+                <td><div class="io-item in">DriveCycle.Speed</div><div class="io-item in">DriveCycle.RPM</div></td>
+                <td><div class="io-item out">CAN[0x400]: Gear</div><div class="io-item out">CAN[0x400]: DriveMode</div></td>
+                <td><span class="dtc-tag">P0700</span><span class="dtc-tag">P0715</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    BMSECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00b4ff;
+                    color:#00b4ff">
+                    CAN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    100ms
+                </td>
+                <td><div class="io-item in">HVBatterySensors</div><div class="io-item in">DriveCycle.Phase</div></td>
+                <td><div class="io-item out">CAN[0x500]: SOC, Voltage</div><div class="io-item out">CAN[0x501]: Temperature</div></td>
+                <td><span class="dtc-tag">P0A80</span><span class="dtc-tag">P1A00</span><span class="dtc-tag">P1A05</span><span class="dtc-tag">P1A10</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    MotorECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00b4ff;
+                    color:#00b4ff">
+                    CAN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    10ms
+                </td>
+                <td><div class="io-item in">CAN[0x500]: SOC</div><div class="io-item in">CAN[0x100]: Speed</div><div class="io-item in">CAN[0x201]: Brake</div></td>
+                <td><div class="io-item out">CAN[0x600]: RPM, Torque</div><div class="io-item out">CAN[0x600]: MotorMode</div></td>
+                <td><span class="dtc-tag">P0A00</span><span class="dtc-tag">P0A0F</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    HybridControlECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">CompositionSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00b4ff;
+                    color:#00b4ff">
+                    CAN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    50ms
+                </td>
+                <td><div class="io-item in">CAN[0x100]: Speed</div><div class="io-item in">CAN[0x500]: SOC</div><div class="io-item in">CAN[0x600]: MotorMode</div><div class="io-item in">CAN[0x201]: Brake</div></td>
+                <td><div class="io-item out">CAN[0x800]: HybridMode</div><div class="io-item out">CAN[0x800]: PowerSplit</div></td>
+                <td><span style="color:#3a6a9c">None</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    RegenBrakeECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00b4ff;
+                    color:#00b4ff">
+                    CAN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    20ms
+                </td>
+                <td><div class="io-item in">CAN[0x201]: Brake</div><div class="io-item in">CAN[0x600]: RegenActive</div><div class="io-item in">CAN[0x100]: Speed</div></td>
+                <td><div class="io-item out">CAN[0x900]: RegenPower</div><div class="io-item out">CAN[0x900]: EnergyRecovered</div></td>
+                <td><span style="color:#3a6a9c">None</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    TPMSECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00cc77;
+                    color:#00cc77">
+                    LIN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    1000ms
+                </td>
+                <td><div class="io-item in">TyrePressureSensors (x4)</div><div class="io-item in">TyreTemperatureSensors (x4)</div></td>
+                <td><div class="io-item out">LIN[0x10]: Pressures</div><div class="io-item out">LIN[0x10]: Temperatures</div></td>
+                <td><span class="dtc-tag">C0750</span><span class="dtc-tag">C0775</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    WindowSeatECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">AtomicSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#00cc77;
+                    color:#00cc77">
+                    LIN</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    1000ms
+                </td>
+                <td><div class="io-item in">WindowSwitches</div><div class="io-item in">SeatPositionSensors</div><div class="io-item in">RainSensor</div></td>
+                <td><div class="io-item out">LIN[0x20]: WindowPositions</div><div class="io-item out">LIN[0x20]: SeatPositions</div></td>
+                <td><span style="color:#3a6a9c">None</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    GatewayECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">CompositionSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#ff9900;
+                    color:#ff9900">
+                    CAN+LIN+Ethernet</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    100ms
+                </td>
+                <td><div class="io-item in">All CAN Messages</div><div class="io-item in">All LIN Frames</div></td>
+                <td><div class="io-item out">Ethernet: VehicleState</div><div class="io-item out">Ethernet: FaultSummary</div></td>
+                <td><span class="dtc-tag">U0001</span><span class="dtc-tag">U0100</span><span class="dtc-tag">U0140</span></td>
+            </tr>
+            <tr>
+                <td><strong style="color:#eaf4ff">
+                    ADASECU</strong>
+                    <div style="font-size:10px;
+                    color:#3a6a9c">CompositionSWC</div>
+                </td>
+                <td><span class="bus-badge"
+                    style="border-color:#ffcc00;
+                    color:#ffcc00">
+                    Ethernet</span>
+                </td>
+                <td style="color:#ffcc00;
+                    font-family:monospace">
+                    100ms
+                </td>
+                <td><div class="io-item in">Ethernet: VehicleState</div></td>
+                <td><div class="io-item out">Ethernet: ADASDecisions</div><div class="io-item out">Dashboard: Warnings</div></td>
+                <td><span style="color:#3a6a9c">None</span></td>
+            </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ── CAN Bus Statistics ── -->
+<div class="section">
+  <div class="section-header">
+    CAN BUS TRAFFIC ANALYSIS
+  </div>
+  <div class="section-body">
+    <div style="display:grid;
+         grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="font-size:10px;color:#3a6a9c;
+             letter-spacing:2px;margin-bottom:10px">
+          MESSAGE COUNT PER ECU
+        </div>
+        <table>
+          <tr>
+            <th>ECU</th><th>MESSAGES</th>
+            <th>LOAD BAR</th><th>% SHARE</th>
+          </tr>
+          
+            <tr>
+                <td style="color:#eaf4ff;
+                    font-family:monospace">
+                    ENGINE
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    64
+                </td>
+                <td>
+                    <div style="background:#0d2040;
+                        border-radius:3px;
+                        height:6px;width:150px">
+                        <div style="background:
+                            linear-gradient(90deg,
+                            #00b4ff,#00eeff);
+                            width:84.76821192052981%;
+                            height:100%;
+                            border-radius:3px">
+                        </div>
+                    </div>
+                </td>
+                <td style="color:#4a6a8a">
+                    42.4%
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#eaf4ff;
+                    font-family:monospace">
+                    ABS
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    59
+                </td>
+                <td>
+                    <div style="background:#0d2040;
+                        border-radius:3px;
+                        height:6px;width:150px">
+                        <div style="background:
+                            linear-gradient(90deg,
+                            #00b4ff,#00eeff);
+                            width:78.1456953642384%;
+                            height:100%;
+                            border-radius:3px">
+                        </div>
+                    </div>
+                </td>
+                <td style="color:#4a6a8a">
+                    39.1%
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#eaf4ff;
+                    font-family:monospace">
+                    MOTOR
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    9
+                </td>
+                <td>
+                    <div style="background:#0d2040;
+                        border-radius:3px;
+                        height:6px;width:150px">
+                        <div style="background:
+                            linear-gradient(90deg,
+                            #00b4ff,#00eeff);
+                            width:11.920529801324504%;
+                            height:100%;
+                            border-radius:3px">
+                        </div>
+                    </div>
+                </td>
+                <td style="color:#4a6a8a">
+                    6.0%
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#eaf4ff;
+                    font-family:monospace">
+                    TRANSMISSION
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    6
+                </td>
+                <td>
+                    <div style="background:#0d2040;
+                        border-radius:3px;
+                        height:6px;width:150px">
+                        <div style="background:
+                            linear-gradient(90deg,
+                            #00b4ff,#00eeff);
+                            width:7.9470198675496695%;
+                            height:100%;
+                            border-radius:3px">
+                        </div>
+                    </div>
+                </td>
+                <td style="color:#4a6a8a">
+                    4.0%
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#eaf4ff;
+                    font-family:monospace">
+                    HYBRID_CTRL
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    5
+                </td>
+                <td>
+                    <div style="background:#0d2040;
+                        border-radius:3px;
+                        height:6px;width:150px">
+                        <div style="background:
+                            linear-gradient(90deg,
+                            #00b4ff,#00eeff);
+                            width:6.622516556291391%;
+                            height:100%;
+                            border-radius:3px">
+                        </div>
+                    </div>
+                </td>
+                <td style="color:#4a6a8a">
+                    3.3%
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#eaf4ff;
+                    font-family:monospace">
+                    BMS
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    3
+                </td>
+                <td>
+                    <div style="background:#0d2040;
+                        border-radius:3px;
+                        height:6px;width:150px">
+                        <div style="background:
+                            linear-gradient(90deg,
+                            #00b4ff,#00eeff);
+                            width:3.9735099337748347%;
+                            height:100%;
+                            border-radius:3px">
+                        </div>
+                    </div>
+                </td>
+                <td style="color:#4a6a8a">
+                    2.0%
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#eaf4ff;
+                    font-family:monospace">
+                    REGEN_BRAKE
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    3
+                </td>
+                <td>
+                    <div style="background:#0d2040;
+                        border-radius:3px;
+                        height:6px;width:150px">
+                        <div style="background:
+                            linear-gradient(90deg,
+                            #00b4ff,#00eeff);
+                            width:3.9735099337748347%;
+                            height:100%;
+                            border-radius:3px">
+                        </div>
+                    </div>
+                </td>
+                <td style="color:#4a6a8a">
+                    2.0%
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#eaf4ff;
+                    font-family:monospace">
+                    AIRBAG
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    2
+                </td>
+                <td>
+                    <div style="background:#0d2040;
+                        border-radius:3px;
+                        height:6px;width:150px">
+                        <div style="background:
+                            linear-gradient(90deg,
+                            #00b4ff,#00eeff);
+                            width:2.6490066225165565%;
+                            height:100%;
+                            border-radius:3px">
+                        </div>
+                    </div>
+                </td>
+                <td style="color:#4a6a8a">
+                    1.3%
+                </td>
+            </tr>
+        </table>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#3a6a9c;
+             letter-spacing:2px;margin-bottom:10px">
+          TOP 5 MOST ACTIVE CAN IDs
+        </div>
+        <table>
+          <tr>
+            <th>CAN ID</th>
+            <th>ECU</th>
+            <th>COUNT</th>
+          </tr>
+          
+            <tr>
+                <td style="color:#00eeff;
+                    font-family:monospace">
+                    0x100
+                </td>
+                <td style="color:#eaf4ff">
+                    ENGINE
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    60
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#00eeff;
+                    font-family:monospace">
+                    0x200
+                </td>
+                <td style="color:#eaf4ff">
+                    ABS
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    49
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#00eeff;
+                    font-family:monospace">
+                    0x201
+                </td>
+                <td style="color:#eaf4ff">
+                    ABS
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    10
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#00eeff;
+                    font-family:monospace">
+                    0x600
+                </td>
+                <td style="color:#eaf4ff">
+                    MOTOR
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    9
+                </td>
+            </tr>
+            <tr>
+                <td style="color:#00eeff;
+                    font-family:monospace">
+                    0x400
+                </td>
+                <td style="color:#eaf4ff">
+                    TRANSMISSION
+                </td>
+                <td style="color:#00b4ff;
+                    font-family:monospace">
+                    6
+                </td>
+            </tr>
+        </table>
+        <div style="margin-top:16px;padding:12px;
+             background:rgba(13,32,64,0.4);
+             border-radius:8px;font-size:11px">
+          <div style="color:#3a6a9c;
+               letter-spacing:2px;font-size:10px;
+               margin-bottom:8px">
+            BUS PARAMETERS
+          </div>
+          <div style="display:grid;
+               grid-template-columns:1fr 1fr;
+               gap:6px;font-family:monospace">
+            <span style="color:#4a6a8a">
+              Protocol:</span>
+            <span style="color:#eaf4ff">
+              CAN 2.0B</span>
+            <span style="color:#4a6a8a">
+              Speed:</span>
+            <span style="color:#eaf4ff">
+              500 kbps</span>
+            <span style="color:#4a6a8a">
+              Max Frame:</span>
+            <span style="color:#eaf4ff">
+              8 bytes</span>
+            <span style="color:#4a6a8a">
+              Termination:</span>
+            <span style="color:#eaf4ff">
+              120Ω × 2</span>
+            <span style="color:#4a6a8a">
+              Total Errors:</span>
+            <span style="color:#00cc77">
+              0
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── DTC Fault Report ── -->
+<div class="section">
+  <div class="section-header">
+    OBD-II DIAGNOSTIC TROUBLE CODE (DTC) REPORT
+  </div>
+  <div class="section-body">
+    <table>
+      <tr>
+        <th>CODE</th>
+        <th>DESCRIPTION</th>
+        <th>SEVERITY</th>
+        <th>SYSTEM</th>
+        <th>RECOMMENDED ACTION</th>
+        <th>TIMESTAMP</th>
+      </tr>
+      
+                <tr>
+                    <td style="color:#ffcc00;
+                        font-family:monospace;
+                        font-weight:700">
+                        P1A00
+                    </td>
+                    <td style="color:#eaf4ff">
+                        HV Battery State of Charge Low
+                    </td>
+                    <td><span class="bus-badge"
+                        style="border-color:#ffcc00;
+                        color:#ffcc00">
+                        WARNING
+                        </span>
+                    </td>
+                    <td style="color:#4a6a8a">
+                        BATTERY
+                    </td>
+                    <td style="color:#3a6a9c;font-size:11px">
+                        Charge HV battery immediately
+                    </td>
+                    <td style="color:#4a6a8a;
+                        font-family:monospace">
+                        11:44:26
+                    </td>
+                </tr>
+                <tr>
+                    <td style="color:#ffcc00;
+                        font-family:monospace;
+                        font-weight:700">
+                        P0562
+                    </td>
+                    <td style="color:#eaf4ff">
+                        System Voltage Low
+                    </td>
+                    <td><span class="bus-badge"
+                        style="border-color:#ffcc00;
+                        color:#ffcc00">
+                        WARNING
+                        </span>
+                    </td>
+                    <td style="color:#4a6a8a">
+                        ENGINE
+                    </td>
+                    <td style="color:#3a6a9c;font-size:11px">
+                        Check battery and alternator
+                    </td>
+                    <td style="color:#4a6a8a;
+                        font-family:monospace">
+                        11:44:26
+                    </td>
+                </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ── Network Architecture ── -->
+<div class="section">
+  <div class="section-header">
+    IN-VEHICLE NETWORK ARCHITECTURE
+  </div>
+  <div class="section-body">
+    <div style="font-family:monospace;font-size:12px;
+         line-height:2;color:#4a6a8a;
+         background:rgba(13,32,64,0.3);
+         padding:20px;border-radius:8px">
+      <span style="color:#00cc77">LIN Bus (1kbps)</span>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <span style="color:#00b4ff">
+        CAN Bus (500kbps)
+      </span>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <span style="color:#ffcc00">
+        Automotive Ethernet (100Mbps)
+      </span><br><br>
+
+      <span style="color:#00cc77">
+        ┌─ TPMS ECU ─────────────────────────────┐
+      </span><br>
+      <span style="color:#00cc77">
+        └─ Window/Seat ECU ──────────────────────┤
+      </span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <span style="color:#ff9900">
+        ▼ GATEWAY ECU
+      </span><br>
+      <span style="color:#00b4ff">
+        ┌─ Engine ECU ───────────────────────────┤
+      </span><br>
+      <span style="color:#00b4ff">
+        ├─ ABS ECU ──────────────────────────────┤
+      </span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <span style="color:#ff9900">
+        ─── bridges ───►
+      </span>
+      <span style="color:#ffcc00">
+        ADAS ECU
+      </span><br>
+      <span style="color:#00b4ff">
+        ├─ Airbag ECU ───────────────────────────┤
+      </span><br>
+      <span style="color:#00b4ff">
+        ├─ Transmission ECU ─────────────────────┤
+      </span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <span style="color:#ffcc00">
+        Dashboard
+      </span><br>
+      <span style="color:#00b4ff">
+        ├─ BMS ECU ──────────────────────────────┤
+      </span><br>
+      <span style="color:#00b4ff">
+        ├─ Motor ECU ────────────────────────────┤
+      </span><br>
+      <span style="color:#00b4ff">
+        ├─ Hybrid Control ECU ───────────────────┤
+      </span><br>
+      <span style="color:#00b4ff">
+        └─ Regen Brake ECU ──────────────────────┘
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  CANVAS — Hybrid Vehicle Network Simulator &nbsp;·&nbsp;
+  Generated 2026-05-02 11:44:34 &nbsp;·&nbsp;
+  CAN · LIN · Ethernet (DoIP) &nbsp;·&nbsp;
+  AUTOSAR Compliant Architecture
+</div>
+
+</body>
+</html>

@@ -1,0 +1,183 @@
+# CANVAS Project
+# Module: CAN Bus
+# File: can_arbitration.py
+# Real CAN bus arbitration + collision detection
+
+import time
+import threading
+import queue
+from vehicle.dtc_manager import dtc_manager
+
+# ── CAN Message Priority Table ────────────────────────────────
+# Lower arbitration ID = Higher priority
+# This matches real CAN bus standard (ISO 11898)
+ARBITRATION_PRIORITY = {
+    0x100 : 1,    # Engine RPM/Speed     — HIGHEST
+    0x101 : 2,    # Engine Temp/Throttle
+    0x200 : 3,    # ABS Wheel Speeds
+    0x201 : 4,    # ABS Brake Pressure
+    0x300 : 5,    # Airbag Status
+    0x400 : 6,    # Transmission
+    0x500 : 7,    # BMS Battery
+    0x501 : 8,    # BMS Temperature
+    0x600 : 9,    # Motor Status
+    0x700 : 10,   # TPMS
+    0x800 : 11,   # Hybrid Control
+    0x900 : 12,   # Regen Brake
+    0xA00 : 13,   # ADAS              — LOWEST
+}
+
+class CANArbitration:
+    """
+    Simulates CAN bus arbitration.
+    Multiple ECUs push messages to a shared queue.
+    Arbitration picks highest priority message first.
+    """
+
+    def __init__(self, real_bus):
+        self.real_bus        = real_bus
+        self.running         = True
+        self.lock            = threading.Lock()
+
+        # Priority queue — lower number = processed first
+        self.msg_queue       = queue.PriorityQueue()
+
+        # Stats
+        self.total_sent      = 0
+        self.total_collisions = 0
+        self.total_retries   = 0
+        self.msg_counts      = {}
+
+    def submit(self, msg, ecu_name='UNKNOWN'):
+        """
+        ECU submits a message for arbitration.
+        Instead of sending directly to bus,
+        message goes through arbitration first.
+        """
+        arb_id   = msg.arbitration_id
+        priority = ARBITRATION_PRIORITY.get(arb_id, 99)
+
+        # Push to priority queue
+        # Tuple: (priority, timestamp, msg, ecu_name)
+        self.msg_queue.put((
+            priority,
+            time.perf_counter(),
+            msg,
+            ecu_name
+        ))
+
+    def _process_queue(self):
+        """
+        Main arbitration loop —
+        processes messages by priority
+        """
+        while self.running:
+            try:
+                # Get highest priority message
+                priority, ts, msg, ecu = (
+                    self.msg_queue.get(timeout=0.01))
+
+                # Check for collision
+                # (message waited too long = collision)
+                wait_time = time.perf_counter() - ts
+                if wait_time > 0.050:
+                    # Message waited > 50ms = collision
+                    self.total_collisions += 1
+
+                    # Retry once (real CAN behavior)
+                    if wait_time < 0.100:
+                        self.total_retries += 1
+                        self.msg_queue.put((
+                            priority,
+                            time.perf_counter(),
+                            msg,
+                            ecu
+                        ))
+                        continue
+                    else:
+                        # Drop message — bus overload
+                        print(f"[ARBITRATION] ⚠️  "
+                              f"Message dropped — "
+                              f"Bus overload "
+                              f"[0x{msg.arbitration_id:X}]")
+                        if self.total_collisions > 100:
+                            dtc_manager.set_fault('U0001')
+                        continue
+
+                # Send to real CAN bus
+                try:
+                    self.real_bus.send(msg)
+                    self.total_sent += 1
+
+                    # Track per-ID counts
+                    aid = msg.arbitration_id
+                    self.msg_counts[aid] = (
+                        self.msg_counts.get(aid, 0) + 1)
+
+                except Exception as e:
+                    print(f"[ARBITRATION] Send error: {e}")
+                    dtc_manager.set_fault('U0001')
+
+            except queue.Empty:
+                continue
+
+    def print_stats(self):
+        """Print arbitration statistics"""
+        while self.running:
+            time.sleep(15)
+            print("\n[ARBITRATION] ── Bus Stats ──")
+            print(f"  Total Sent     : {self.total_sent}")
+            print(f"  Collisions     : "
+                  f"{self.total_collisions}")
+            print(f"  Retries        : {self.total_retries}")
+            print(f"  Bus Load       : "
+                  f"{self._calc_bus_load():.1f}%")
+            print("[ARBITRATION] ─────────────────\n")
+
+    def _calc_bus_load(self):
+        """
+        Estimate CAN bus load %.
+        Real CAN bus max ~8000 msgs/sec at 500kbps
+        """
+        total = sum(self.msg_counts.values())
+        # Rough estimate over 15 second window
+        msgs_per_sec = total / max(1, 15)
+        return min(100, (msgs_per_sec / 8000) * 100)
+
+    def start(self):
+        print("[ARBITRATION] CAN Bus arbitration "
+              "engine starting...")
+        threads = [
+            threading.Thread(
+                target=self._process_queue,
+                daemon=True),
+            threading.Thread(
+                target=self.print_stats,
+                daemon=True),
+        ]
+        for t in threads:
+            t.start()
+        print("[ARBITRATION] ✅ Arbitration active "
+              "— Priority based message routing")
+
+    def stop(self):
+        self.running = False
+        print(f"[ARBITRATION] Stopped. "
+              f"Total sent: {self.total_sent} "
+              f"Collisions: {self.total_collisions}")
+
+
+# ── Global arbitration instance ───────────────────────────────
+# All ECUs use this instead of bus.send() directly
+_arbitration = None
+
+def init_arbitration(real_bus):
+    """Initialize global arbitration with real bus"""
+    global _arbitration
+    _arbitration = CANArbitration(real_bus)
+    _arbitration.start()
+    return _arbitration
+
+def get_arbitration():
+    """Get global arbitration instance"""
+    return _arbitration
