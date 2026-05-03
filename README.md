@@ -14,6 +14,20 @@ An industry-grade automotive network simulation and cybersecurity testing platfo
 
 ---
 
+## 🚀 Why This Matters
+
+Modern vehicles rely on complex in-vehicle networks (CAN, LIN, Ethernet).  
+Testing cybersecurity vulnerabilities and fault scenarios in real vehicles is expensive and risky.
+
+CANVAS provides a safe environment to:
+- Simulate ECU communication
+- Test cyber attacks (Spoofing, DoS)
+- Validate IDS systems
+- Analyze real-time vehicle network behavior
+
+---
+
+
 ## 📸 Screenshots  
 
 ### Dashboard View  
