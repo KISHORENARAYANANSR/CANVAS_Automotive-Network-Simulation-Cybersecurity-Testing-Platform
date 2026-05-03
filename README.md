@@ -200,6 +200,5 @@ Focused on Automotive Systems, Embedded AI, and Connected Mobility
 
 ---
 
-## 📜 License  
-
-This project is for educational and research purposes.
+## 📄 License
+This project is licensed under the MIT License.
