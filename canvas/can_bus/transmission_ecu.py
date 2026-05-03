@@ -1,42 +1,44 @@
 # CANVAS Project
 # Module: CAN Bus
 # File: transmission_ecu.py
-# Transmission ECU — gear from DriveCycle
+# Transmission ECU   gear from DriveCycle
 
 import can
-import time
-import threading
+import can
+from utils.can_codec import codec
 
-class TransmissionECU:
+class TransmissionECU(can.Listener):
     def __init__(self, bus, drive_cycle):
         self.bus     = bus
         self.dc      = drive_cycle
         self.running = True
 
-    def send_transmission_status(self):
-        """Send CAN frame: Gear + Drive mode (ID: 0x400)"""
-        while self.running:
-            gear       = self.dc.gear
-            mode_byte  = 0x03   # D = Drive
-            shift_flag = 0x00
+    def send_transmission_status_step(self):
+        """Send CAN frame: Gear + Drive mode step"""
+        if not self.running: return
+        gear       = self.dc.gear
+        mode_byte  = 0x03   # D = Drive
+        shift_flag = 0x00
 
-            msg = can.Message(
-                arbitration_id=0x400,
-                data=[gear, mode_byte, shift_flag,
-                      0x00, 0x00, 0x00, 0x00, 0x00],
-                is_extended_id=False
-            )
-            self.bus.send(msg)
-            print(f"[TRANSMISSION ECU] Sent → "
-                  f"Gear:{gear} Mode:D")
-            time.sleep(0.1)
+        msg = can.Message(
+            arbitration_id=0x400,
+            data=codec.encode(0x400, {
+                'Gear': gear,
+                'Drive_Mode': mode_byte
+            }),
+            is_extended_id=False
+        )
+        self.bus.send(msg)
+        print(f"[TRANSMISSION ECU] Sent -> "
+              f"Gear:{gear} Mode:D")
+
+    def on_message_received(self, msg):
+        pass
 
     def start(self):
         print("[TRANSMISSION ECU] Starting...")
-        t        = threading.Thread(
-            target=self.send_transmission_status)
-        t.daemon = True
-        t.start()
+        from core.scheduler import scheduler
+        scheduler.register('TRANSMISSION_STATUS', 100, self.send_transmission_status_step)
 
     def stop(self):
         self.running = False

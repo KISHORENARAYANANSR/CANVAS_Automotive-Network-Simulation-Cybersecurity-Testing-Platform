@@ -12,7 +12,7 @@ class FaultManager:
         self.ethernet_bus = ethernet_bus
         self.running      = True
 
-        # Override flags — set by fault manager
+        # Override flags   set by fault manager
         # ECUs check these flags every cycle
         self.overrides = {
             'engine_cut_fuel'     : False,
@@ -29,7 +29,7 @@ class FaultManager:
         # Broadcast overrides to ethernet bus
         self.ethernet_bus['overrides'] = self.overrides
 
-        # Previous state — to detect changes
+        # Previous state   to detect changes
         self._prev = {}
 
     def _set_override(self, key, value):
@@ -39,8 +39,8 @@ class FaultManager:
             self.ethernet_bus['overrides'] = (
                 self.overrides.copy())
             status = "ON" if value else "OFF"
-            print(f"[FAULT MGR] ⚡ Override: "
-                  f"{key} → {status}")
+            print(f"[FAULT MGR] [POW] Override: "
+                  f"{key} -> {status}")
 
     def _check_engine(self, state):
         """Engine ECU fault rules"""
@@ -49,27 +49,27 @@ class FaultManager:
         temp  = state.get('engine_temp', 0)
         speed = state.get('vehicle_speed', 0)
 
-        # Rule 1: Engine overspeed → force downshift
+        # Rule 1: Engine overspeed -> force downshift
         if rpm > 4500:
             dtc_manager.set_fault('P0219')
             self._set_override('transmission_hold', True)
-            print("[FAULT MGR] 🔴 Engine overspeed → "
+            print("[FAULT MGR] [ERROR] Engine overspeed -> "
                   "Forcing transmission downshift")
         else:
             self._set_override('transmission_hold', False)
 
-        # Rule 2: Engine overtemp → switch to EV mode
+        # Rule 2: Engine overtemp -> switch to EV mode
         if temp >= 95:
             dtc_manager.set_fault('P0217')
             self._set_override('force_hv_mode', False)
-            print("[FAULT MGR] 🌡️  Engine overtemp → "
+            print("[FAULT MGR] [TEMP]  Engine overtemp -> "
                   "Switching to EV mode")
 
-        # Rule 3: Engine overtemp critical → cut fuel
+        # Rule 3: Engine overtemp critical -> cut fuel
         if temp >= 105:
             self._set_override('engine_cut_fuel', True)
             self._set_override('emergency_stop', True)
-            print("[FAULT MGR] 🚨 CRITICAL OVERHEAT → "
+            print("[FAULT MGR] [CRIT] CRITICAL OVERHEAT -> "
                   "Fuel cut + Emergency stop!")
         else:
             self._set_override('engine_cut_fuel', False)
@@ -86,19 +86,19 @@ class FaultManager:
             state.get('wheel_speed_rr', 0),
         ]
 
-        # Rule 1: Hard braking → activate regen
+        # Rule 1: Hard braking -> activate regen
         if brake > 40 and speed > 10:
             self._set_override('force_regen', True)
-            print("[FAULT MGR] ⚡ Hard braking → "
+            print("[FAULT MGR] [POW] Hard braking -> "
                   "Forcing regen braking")
         else:
             self._set_override('force_regen', False)
 
-        # Rule 2: Wheel speed mismatch → ABS heightened
+        # Rule 2: Wheel speed mismatch -> ABS heightened
         if max(wheels) - min(wheels) > 15:
             dtc_manager.set_fault('C0035')
             self._set_override('abs_heightened', True)
-            print("[FAULT MGR] ⚠️  Wheel mismatch → "
+            print("[FAULT MGR] [WARN]  Wheel mismatch -> "
                   "ABS heightened sensitivity")
         else:
             self._set_override('abs_heightened', False)
@@ -107,7 +107,7 @@ class FaultManager:
         if brake >= 70 and speed > 5:
             self._set_override('emergency_stop', True)
             self._set_override('adas_alert_level', 'CRITICAL')
-            print("[FAULT MGR] 🚨 EMERGENCY BRAKE → "
+            print("[FAULT MGR] [CRIT] EMERGENCY BRAKE -> "
                   "ADAS critical alert!")
         elif brake < 50:
             self._set_override('emergency_stop', False)
@@ -120,18 +120,18 @@ class FaultManager:
         batt_state   = state.get('battery_state', 'NORMAL')
         batt_voltage = state.get('battery_voltage', 200)
 
-        # Rule 1: Battery critical → force HV mode
+        # Rule 1: Battery critical -> force HV mode
         if soc <= 15:
             dtc_manager.set_fault('P1A00')
             self._set_override('force_hv_mode', True)
             self._set_override('disable_motor', True)
-            print("[FAULT MGR] 🔋 Battery critical → "
+            print("[FAULT MGR] [BATT] Battery critical -> "
                   "Force HV + Disable motor")
 
         elif soc <= 25:
             self._set_override('force_hv_mode', True)
             self._set_override('disable_motor', False)
-            print("[FAULT MGR] 🔋 Battery low → "
+            print("[FAULT MGR] [BATT] Battery low -> "
                   "Force HV mode")
         else:
             self._set_override('force_hv_mode', False)
@@ -141,7 +141,7 @@ class FaultManager:
         if batt_state == 'CRITICAL':
             dtc_manager.set_fault('P0A80')
             self._set_override('hv_battery_disconnect', True)
-            print("[FAULT MGR] 🚨 HV Battery critical → "
+            print("[FAULT MGR] [CRIT] HV Battery critical -> "
                   "Disconnect HV system!")
         else:
             self._set_override(
@@ -158,14 +158,14 @@ class FaultManager:
         deployed = state.get('airbag_deployed', False)
         impact   = state.get('impact_force', 0)
 
-        # Rule 1: Crash detected → engine cut + HV disconnect
+        # Rule 1: Crash detected -> engine cut + HV disconnect
         if crash and impact > 10:
             dtc_manager.set_fault('B0001')
             self._set_override('engine_cut_fuel', True)
             self._set_override('hv_battery_disconnect', True)
             self._set_override('emergency_stop', True)
             self._set_override('adas_alert_level', 'CRITICAL')
-            print("[FAULT MGR] 💥 CRASH DETECTED → "
+            print("[FAULT MGR]   CRASH DETECTED -> "
                   "Engine cut + HV disconnect + "
                   "Emergency stop!")
 
@@ -184,12 +184,12 @@ class FaultManager:
             state.get('tyre_pressure_rr', 33),
         ]
 
-        # Rule 1: Any tyre below 26 PSI → DTC + ADAS alert
+        # Rule 1: Any tyre below 26 PSI -> DTC + ADAS alert
         if any(t < 26 and t > 0 for t in tyres):
             dtc_manager.set_fault('C0775')
             self._set_override(
                 'adas_alert_level', 'WARNING')
-            print("[FAULT MGR] 🔴 Tyre pressure low → "
+            print("[FAULT MGR] [ERROR] Tyre pressure low -> "
                   "ADAS warning!")
 
         # Rule 2: Tyre blowout (< 15 PSI)
@@ -198,7 +198,7 @@ class FaultManager:
             self._set_override('emergency_stop', True)
             self._set_override(
                 'adas_alert_level', 'CRITICAL')
-            print("[FAULT MGR] 🚨 TYRE BLOWOUT → "
+            print("[FAULT MGR] [CRIT] TYRE BLOWOUT -> "
                   "Emergency stop!")
 
     def _check_motor(self, state):
@@ -209,16 +209,16 @@ class FaultManager:
 
         # Rule 1: Motor disabled override
         if self.overrides['disable_motor']:
-            print("[FAULT MGR] 🔌 Motor disabled "
+            print("[FAULT MGR]   Motor disabled "
                   "by fault override")
 
         # Rule 2: Forced regen override
         if self.overrides['force_regen']:
-            print("[FAULT MGR] ⚡ Regen forced "
+            print("[FAULT MGR] [POW] Regen forced "
                   "by braking event")
 
     def monitor(self):
-        """Main monitoring loop — runs every 100ms"""
+        """Main monitoring loop   runs every 100ms"""
         while self.running:
             state = self.ethernet_bus.get(
                 'vehicle_state', {})

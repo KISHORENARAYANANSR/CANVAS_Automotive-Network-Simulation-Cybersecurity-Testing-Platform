@@ -1,13 +1,13 @@
 # CANVAS Project
 # Module: Vehicle
 # File: fault_injector.py
-# Fault injection engine — FMEA testing simulator
+# Fault injection engine   FMEA testing simulator
 
 import time
 import threading
 from vehicle.dtc_manager import dtc_manager
 
-# ── Predefined fault scenarios ────────────────────────────────
+# -- Predefined fault scenarios --------------------------------
 FAULT_SCENARIOS = {
 
     'battery_failure': {
@@ -126,7 +126,7 @@ class FaultInjector:
         }
         with self.lock:
             self.injection_log.append(entry)
-        print(f"[FAULT INJECTOR] 💉 DTC Injected: {code}")
+        print(f"[FAULT INJECTOR]   DTC Injected: {code}")
         self._broadcast_log()
 
     def inject_scenario(self, scenario_key):
@@ -137,7 +137,7 @@ class FaultInjector:
             return
 
         scenario = FAULT_SCENARIOS[scenario_key]
-        print(f"\n[FAULT INJECTOR] 🚨 Injecting scenario: "
+        print(f"\n[FAULT INJECTOR] [CRIT] Injecting scenario: "
               f"{scenario['name']}")
         print(f"[FAULT INJECTOR] {scenario['desc']}")
 
@@ -174,7 +174,7 @@ class FaultInjector:
         with self.lock:
             self.injection_log.append(entry)
 
-        print(f"[FAULT INJECTOR] ✅ Scenario complete: "
+        print(f"[FAULT INJECTOR] [OK] Scenario complete: "
               f"{scenario['name']}")
         self._broadcast_log()
 
@@ -198,7 +198,7 @@ class FaultInjector:
             for dtc in scenario['dtcs']:
                 dtc_manager.clear_fault(dtc)
 
-            print(f"[FAULT INJECTOR] ✅ Reset: "
+            print(f"[FAULT INJECTOR] [OK] Reset: "
                   f"{scenario['name']}")
 
         self.active_scenario = None
@@ -220,7 +220,7 @@ class FaultInjector:
         }
         self.ethernet_bus['overrides'] = overrides
         self.active_scenario           = None
-        print("[FAULT INJECTOR] ✅ All faults reset")
+        print("[FAULT INJECTOR] [OK] All faults reset")
         self._broadcast_log()
 
     def _broadcast_log(self):
@@ -247,7 +247,7 @@ class FaultInjector:
         print("[FAULT INJECTOR] Stopped.")
 
 
-# ── Global injector instance ──────────────────────────────────
+# -- Global injector instance ----------------------------------
 _injector = None
 
 def init_injector(ethernet_bus):

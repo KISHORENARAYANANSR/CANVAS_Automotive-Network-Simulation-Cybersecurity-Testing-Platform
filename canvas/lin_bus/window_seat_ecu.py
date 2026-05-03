@@ -1,7 +1,7 @@
 # CANVAS Project
 # Module: LIN Bus
 # File: window_seat_ecu.py
-# Simulates Window + Seat ECU — body comfort electronics on LIN Bus
+# Simulates Window + Seat ECU   body comfort electronics on LIN Bus
 
 import time
 import random
@@ -34,7 +34,7 @@ class WindowSeatECU:
         self.mirror_left_angle    = 0     # degrees
         self.mirror_right_angle   = 0     # degrees
 
-        # Safety — auto close windows if rain detected
+        # Safety   auto close windows if rain detected
         self.rain_detected        = False
 
     def simulate_windows(self):
@@ -57,13 +57,13 @@ class WindowSeatECU:
                         setattr(self, f'window_{tyre}_moving', False)
 
                     setattr(self, f'window_{tyre}', new_pos)
-                    print(f"[WINDOW/SEAT ECU] Window {tyre.upper()} → "
+                    print(f"[WINDOW/SEAT ECU] Window {tyre.upper()} -> "
                           f"{new_pos}% open")
 
             # Simulate rain detection (1% chance)
             if random.random() < 0.01:
                 self.rain_detected = True
-                print("[WINDOW/SEAT ECU] 🌧️  Rain detected → "
+                print("[WINDOW/SEAT ECU]     Rain detected -> "
                       "Auto closing all windows!")
                 self.window_fl = 0
                 self.window_fr = 0
@@ -81,16 +81,16 @@ class WindowSeatECU:
             if random.random() < 0.03:
                 self.seat_driver_pos = random.randint(30, 80)
                 self.seat_driver_recline = random.randint(25, 60)
-                print(f"[WINDOW/SEAT ECU] Driver Seat → "
+                print(f"[WINDOW/SEAT ECU] Driver Seat -> "
                       f"Pos:{self.seat_driver_pos}% "
-                      f"Recline:{self.seat_driver_recline}°")
+                      f"Recline:{self.seat_driver_recline} ")
 
             if random.random() < 0.02:
                 self.seat_passenger_pos = random.randint(30, 80)
                 self.seat_pass_recline  = random.randint(25, 60)
-                print(f"[WINDOW/SEAT ECU] Passenger Seat → "
+                print(f"[WINDOW/SEAT ECU] Passenger Seat -> "
                       f"Pos:{self.seat_passenger_pos}% "
-                      f"Recline:{self.seat_pass_recline}°")
+                      f"Recline:{self.seat_pass_recline} ")
 
             time.sleep(2.0)
 
@@ -115,13 +115,13 @@ class WindowSeatECU:
             # Publish to LIN bus (shared dict)
             self.lin_bus['window_seat'] = frame
 
-            print(f"[WINDOW/SEAT ECU] LIN Sent → "
+            print(f"[WINDOW/SEAT ECU] LIN Sent -> "
                   f"Windows FL:{self.window_fl}% "
                   f"FR:{self.window_fr}% "
                   f"RL:{self.window_rl}% "
                   f"RR:{self.window_rr}% | "
                   f"Driver Seat:{self.seat_driver_pos}%")
-            time.sleep(1.0)   # LIN bus — slower cycle time
+            time.sleep(1.0)   # LIN bus   slower cycle time
 
     def start(self):
         print("[WINDOW/SEAT ECU] Starting...")

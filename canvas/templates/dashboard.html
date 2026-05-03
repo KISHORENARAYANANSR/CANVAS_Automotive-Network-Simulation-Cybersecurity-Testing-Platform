@@ -7,7 +7,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='65'>🚘</text><text x='50' y='45' font-size='45'>📡</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'></path><path d='M12 8v8'></path><path d='M8 12h8'></path></svg>">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
@@ -26,6 +27,7 @@
             --yellow: #d97706;
             --white: #1e293b;
             --tdim: #94a3b8;
+            --accent: #6366f1;
         }
 
         * {
@@ -44,10 +46,27 @@
 
         .shell {
             display: grid;
-            grid-template-rows: 64px 1fr 52px;
+            grid-template-rows: 64px 1fr auto;
             height: 100vh;
-            padding: 0 16px;
-            gap: 6px;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            padding: 8px 16px;
+            gap: 8px;
+            background: var(--bg);
+            overflow: hidden;
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            background: #fff;
         }
 
         /* Header */
@@ -56,10 +75,10 @@
             align-items: center;
             justify-content: space-between;
             background: #fff;
-            margin: 0 -16px;
-            padding: 0 16px;
+            padding: 0 40px 0 16px;
             border-bottom: 2px solid var(--border);
             box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+            height: 64px;
         }
 
         .logo {
@@ -92,9 +111,7 @@
         }
 
         .logo-mark::after {
-            content: '◈';
-            color: var(--blue);
-            font-size: 14px;
+            content: none;
         }
 
         .logo-text {
@@ -105,10 +122,11 @@
         }
 
         .logo-sub {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--sdim);
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
         }
 
         .hcenter {
@@ -152,6 +170,28 @@
             background: #fffbeb;
             border: 2px solid var(--yellow);
             color: var(--yellow);
+        }
+
+        .fpill.test {
+            background: #fff7ed;
+            border: 2px solid #f97316;
+            color: #f97316;
+            display: none;
+            animation: pulse-orange 2s infinite;
+        }
+
+        @keyframes pulse-orange {
+            0% {
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(249, 115, 22, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+            }
         }
 
         .hright {
@@ -209,12 +249,15 @@
         /* Tab Pages */
         .page {
             display: none;
+            flex: 1;
             height: 100%;
             min-height: 0;
+            overflow-y: auto;
         }
 
         .page.active {
             display: grid;
+            flex: 1;
         }
 
         /* ── MAIN PAGE ── */
@@ -583,8 +626,9 @@
         #pg-logger {
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: auto 1fr;
-            gap: 8px;
+            gap: 12px;
             overflow: hidden;
+            height: 100%;
         }
 
         .logger-stat-row {
@@ -601,6 +645,407 @@
             padding: 14px;
             text-align: center;
             box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+        }
+
+        /* --- TEST PANEL STYLES --- */
+        .test-toggle-btn {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .test-toggle-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .test-panel {
+            position: fixed;
+            top: 64px;
+            right: -320px;
+            width: 300px;
+            height: calc(100vh - 116px);
+            background: white;
+            border-left: 2px solid var(--border);
+            z-index: 999;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-panel.open {
+            right: 0;
+        }
+
+        .test-section {
+            margin-bottom: 24px;
+        }
+
+        .test-section-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--tdim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .test-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--bg2);
+        }
+
+        .ctrl-group {
+            margin-bottom: 15px;
+        }
+
+        .ctrl-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .ctrl-val {
+            color: var(--accent);
+            font-family: 'JetBrains Mono';
+        }
+
+        .test-slider {
+            width: 100%;
+            height: 6px;
+            background: var(--bg2);
+            border-radius: 3px;
+            appearance: none;
+            outline: none;
+        }
+
+        .test-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .test-btn {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 6px;
+            transition: all 0.2s;
+        }
+
+        .test-btn:hover {
+            background: var(--bg2);
+        }
+
+        .test-btn.active {
+            background: var(--red);
+            color: white;
+            border-color: var(--red);
+        }
+
+        /* --- TOAST SYSTEM --- */
+        #toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: white;
+            border-left: 5px solid var(--accent);
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            min-width: 250px;
+            animation: toastIn 0.4s ease-out;
+            pointer-events: auto;
+        }
+
+        @keyframes toastIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-title {
+            font-weight: 800;
+            font-size: 12px;
+            color: var(--white);
+            margin-bottom: 2px;
+        }
+
+        .toast-msg {
+            font-size: 11px;
+            color: var(--sdim);
+        }
+
+        /* --- ALERT PANEL OVERLAY --- */
+        /* --- SIDEBAR SECURITY ALERTS --- */
+        .alert-msg {
+            font-size: 11px;
+            color: var(--sdim);
+            line-height: 1.4;
+        }
+
+        /* Severity Coding */
+        .alert-item {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-left-width: 5px !important;
+            transition: all 0.3s;
+        }
+
+        .alert-item .alert-type {
+            font-weight: 900;
+            filter: contrast(1.2);
+        }
+
+        .alert-item.CRITICAL {
+            border-left-color: var(--red) !important;
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.1);
+        }
+
+        .alert-item.WARNING {
+            border-left-color: var(--yellow) !important;
+        }
+
+        .alert-item.INFO {
+            border-left-color: var(--blue) !important;
+        }
+
+        .alert-item.CRITICAL:hover {
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.2);
+            transform: scale(1.01);
+        }
+
+        /* Active Attack Indicator */
+        .test-btn.active-atk {
+            background: #451a03 !important;
+            /* Very dark orange/brown */
+            animation: pulse-atk 1.5s infinite !important;
+            border-color: #f97316 !important;
+            position: relative;
+        }
+
+        @keyframes pulse-atk {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Signal Validation Highlighting */
+        .abnormal-val {
+            color: var(--red) !important;
+            background: #fef2f2;
+            padding: 2px 4px;
+            border-radius: 4px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            animation: flash-red 1s infinite;
+        }
+
+        @keyframes flash-red {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* --- TEST MODE MASTER TOGGLE --- */
+        .test-mode-section {
+            transition: all 0.3s ease;
+        }
+
+        .test-mode-section.disabled {
+            opacity: 0.5;
+            filter: grayscale(0.5);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .master-toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-toggle {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider-toggle:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider-toggle {
+            background-color: var(--blue);
+        }
+
+        input:checked+.slider-toggle:before {
+            transform: translateX(16px);
+        }
+
+        .test-slider {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+            margin: 10px 0;
+        }
+
+        .test-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--blue);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .test-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--silver);
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 6px;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-btn:hover {
+            border-color: var(--blue);
+            background: #eff6ff;
+        }
+
+        .test-btn.active {
+            border-color: var(--red);
+            background: #fef2f2;
+            color: var(--red);
+        }
+
+        .test-group-title {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--tdim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 15px 0 8px 0;
+        }
+
+        .test-group-title:first-child {
+            margin-top: 0;
+        }
+
+        .ctrl-val-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--sdim);
+        }
+
+        .ctrl-val-num {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--blue);
+            font-weight: 700;
         }
 
         .stat-card::before {
@@ -701,8 +1146,9 @@
         #pg-injector {
             grid-template-columns: 1fr 1fr;
             grid-template-rows: auto 1fr;
-            gap: 8px;
+            gap: 12px;
             overflow: hidden;
+            height: 100%;
         }
 
         .inj-header-row {
@@ -879,10 +1325,12 @@
 
         /* ── REPORT PAGE ── */
         #pg-report {
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto 1fr;
-            gap: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            height: 100%;
             overflow: hidden;
+            padding: 4px 0;
         }
 
         .report-header-row {
@@ -977,43 +1425,54 @@
             content: '→ ';
         }
 
-        /* ADAS Bar */
+        /* ADAS Bar - Fixed at bottom of main area */
         .adas-bar {
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 12px;
             background: #fff;
-            margin: 0 -16px;
-            padding: 8px 16px;
-            border-top: 2px solid var(--border);
-            box-shadow: 0 -2px 8px rgba(0, 0, 0, .04);
+            padding: 0 20px;
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, .05);
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            width: 100%;
+            height: 48px;
+            flex-shrink: 0;
+            box-sizing: border-box;
         }
 
         .adas-label {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 800;
             color: var(--silver);
-            white-space: nowrap;
-            margin-right: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-right: 10px;
         }
 
         .adas-pill {
-            padding: 4px 12px;
-            border-radius: 20px;
-            border: 2px solid var(--border);
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
             font-size: 11px;
-            font-weight: 600;
-            color: var(--tdim);
+            font-weight: 700;
+            color: var(--sdim);
             background: #f8fafc;
-            transition: all .3s;
+            transition: all .2s ease;
             white-space: nowrap;
+            text-align: center;
+            min-width: 90px;
         }
 
         .adas-pill.active {
             border-color: var(--red);
             color: var(--red);
             background: #fef2f2;
-            animation: blink .8s ease-in-out infinite;
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.2);
+            animation: blink 1s ease-in-out infinite;
         }
 
         .adas-pill.active-green {
@@ -1090,566 +1549,877 @@
         <!-- ── Header ── -->
         <header class="header">
             <div class="logo">
-                <div class="logo-mark"></div>
+                <div class="logo-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                        stroke-linejoin="round" style="width: 18px; height: 18px; color: var(--blue);">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="M12 8v8"></path>
+                        <path d="M8 12h8"></path>
+                    </svg>
+                </div>
                 <div>
                     <div class="logo-text">CANVAS</div>
-                    <div class="logo-sub" style="font-size: 8px;">CAN-LIN Automotive Network Virtual Architecture Simulator</div>
+                    <div class="logo-sub">Automotive Network Simulation & Cybersecurity Testing Platform</div>
                 </div>
             </div>
 
             <div class="hcenter">
                 <div class="ign-badge" id="ignBadge">● OFF</div>
-                <div class="fpill crit" id="critCount">⬤ 0 CRITICAL</div>
-                <div class="fpill warn" id="warnCount">⬤ 0 WARNINGS</div>
+                <div class="fpill crit" id="critCount">0 CRITICAL ALERTS</div>
+                <div class="fpill warn" id="warnCount">0 ACTIVE WARNINGS</div>
+                <div class="fpill test" id="testModePill">TEST MODE ACTIVE</div>
                 <div class="tabs">
                     <div class="tab active" onclick="switchTab('main')">DASHBOARD</div>
                     <div class="tab" onclick="switchTab('logger')">CAN LOGGER</div>
-                    <div class="tab" onclick="switchTab('injector')">FAULT INJECT</div>
-                    <div class="tab" onclick="switchTab('report')">REPORT</div>
+                    <div class="tab" onclick="switchTab('injector')">FAULT SIMULATION</div>
+                    <div class="tab" onclick="switchTab('security')">VEHICLE SECURITY</div>
+                    <div class="tab" onclick="switchTab('report')">SYSTEM REPORT</div>
                 </div>
             </div>
 
             <div class="hright">
-                <div class="phase-badge" id="phaseBadge">● IDLE</div>
                 <div class="clock" id="clock">--:--:--</div>
             </div>
         </header>
 
-        <!-- ── Pages ── -->
+        <main class="main-content">
+            <div id="page-container" style="flex:1; min-height:0; display:flex; flex-direction:column;">
 
-        <!-- MAIN DASHBOARD -->
-        <div class="page active" id="pg-main">
+                <!-- ── Pages ── -->
 
-            <!-- Col 1: Gauges -->
-            <div class="left-col">
-                <div class="panel speed-panel">
-                    <div class="ptitle">Speed</div>
-                    <canvas id="speedGauge" width="180" height="180" style="width:180px;height:180px"></canvas>
-                    <div class="batt-wrap" style="width:100%;margin-top:6px">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-                            <span style="font-size:11px;font-weight:700;color:var(--sdim)">BATTERY SOC</span>
-                            <span
-                                style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue)"
-                                id="socVal">--%</span>
+                <!-- MAIN DASHBOARD -->
+                <div class="page active" id="pg-main">
+
+                    <!-- Col 1: Gauges -->
+                    <div class="left-col">
+                        <div class="panel speed-panel">
+                            <div class="ptitle">Speed</div>
+                            <canvas id="speedGauge" width="180" height="180" style="width:180px;height:180px"></canvas>
+                            <div class="batt-wrap" style="width:100%;margin-top:6px">
+                                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                                    <span style="font-size:11px;font-weight:700;color:var(--sdim)">BATTERY SOC</span>
+                                    <span
+                                        style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue)"
+                                        id="socVal">--%</span>
+                                </div>
+                                <div class="batt-bar-bg">
+                                    <div class="batt-bar-fill" id="socBar" style="width:75%"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="batt-bar-bg">
-                            <div class="batt-bar-fill" id="socBar" style="width:75%"></div>
+
+                        <div class="panel">
+                            <div class="gauge-row">
+                                <div class="gauge-wrap">
+                                    <div class="ptitle" style="text-align:center">RPM</div>
+                                    <canvas id="rpmGauge" width="120" height="120"
+                                        style="width:120px;height:120px"></canvas>
+                                </div>
+                                <div class="gauge-wrap">
+                                    <div class="ptitle" style="text-align:center">TEMP °C</div>
+                                    <canvas id="tempGauge" width="120" height="120"
+                                        style="width:120px;height:120px"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel ecu-boot">
+                            <div class="ptitle">ECU Boot Status</div>
+                            <div id="ecuBootList"></div>
                         </div>
                     </div>
-                </div>
 
-                <div class="panel">
-                    <div class="gauge-row">
-                        <div class="gauge-wrap">
-                            <div class="ptitle" style="text-align:center">RPM</div>
-                            <canvas id="rpmGauge" width="120" height="120" style="width:120px;height:120px"></canvas>
+                    <!-- Col 2: Graphs -->
+                    <div class="center-col">
+                        <div class="panel graph-panel">
+                            <div class="ptitle">Speed km/h</div>
+                            <canvas id="speedChart"></canvas>
                         </div>
-                        <div class="gauge-wrap">
-                            <div class="ptitle" style="text-align:center">TEMP °C</div>
-                            <canvas id="tempGauge" width="120" height="120" style="width:120px;height:120px"></canvas>
+                        <div class="panel graph-panel">
+                            <div class="ptitle">Engine RPM</div>
+                            <canvas id="rpmChart"></canvas>
                         </div>
                     </div>
-                </div>
 
-                <div class="panel ecu-boot">
-                    <div class="ptitle">ECU Boot Status</div>
-                    <div id="ecuBootList"></div>
-                </div>
-            </div>
-
-            <!-- Col 2: Graphs -->
-            <div class="center-col">
-                <div class="panel graph-panel">
-                    <div class="ptitle">Speed km/h</div>
-                    <canvas id="speedChart"></canvas>
-                </div>
-                <div class="panel graph-panel">
-                    <div class="ptitle">Engine RPM</div>
-                    <canvas id="rpmChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Col 3: Hybrid + Tyre -->
-            <div class="center-col2">
-                <div class="panel">
-                    <div class="ptitle">Hybrid System</div>
-                    <div class="hybrid-card">
-                        <div>
-                            <div class="hybrid-mode-val" id="hybridMode">--</div>
-                            <div class="hybrid-label">DRIVE MODE</div>
-                            <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-                                <div class="gear-big" id="gearDisp">1</div>
+                    <!-- Col 3: Hybrid + Tyre -->
+                    <div class="center-col2">
+                        <div class="panel">
+                            <div class="ptitle">Hybrid System</div>
+                            <div class="hybrid-card">
                                 <div>
-                                    <div style="font-size:10px;font-weight:700;color:var(--sdim)">GEAR</div>
-                                    <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--silver)"
-                                        id="driveModeDisp">D</div>
+                                    <div class="hybrid-mode-val" id="hybridMode">--</div>
+                                    <div class="hybrid-label">DRIVE MODE</div>
+                                    <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+                                        <div class="gear-big" id="gearDisp">1</div>
+                                        <div>
+                                            <div style="font-size:10px;font-weight:700;color:var(--sdim)">GEAR</div>
+                                            <div style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--silver)"
+                                                id="driveModeDisp">D</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="hybrid-inds">
+                                    <div class="h-row">
+                                        <div class="h-dot" id="phaseDot"></div>
+                                        <div class="h-lbl">DRIVE PHASE</div>
+                                        <div class="h-val" id="phaseVal">IDLE</div>
+                                    </div>
+                                    <div class="h-row">
+                                        <div class="h-dot" id="engineDot"></div>
+                                        <div class="h-lbl">ENGINE</div>
+                                        <div class="h-val" id="engineVal">OFF</div>
+                                    </div>
+                                    <div class="h-row">
+                                        <div class="h-dot" id="motorDot"></div>
+                                        <div class="h-lbl">MOTOR</div>
+                                        <div class="h-val" id="motorVal">OFF</div>
+                                    </div>
+                                    <div class="h-row">
+                                        <div class="h-dot" id="regenDot"></div>
+                                        <div class="h-lbl">REGEN</div>
+                                        <div class="h-val" id="regenVal">0.0kW</div>
+                                    </div>
+                                    <div class="h-row">
+                                        <div class="h-dot on" id="battDot"></div>
+                                        <div class="h-lbl">BATTERY</div>
+                                        <div class="h-val" id="battVal">--</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="hybrid-inds">
-                            <div class="h-row">
-                                <div class="h-dot" id="engineDot"></div>
-                                <div class="h-lbl">ENGINE</div>
-                                <div class="h-val" id="engineVal">OFF</div>
+
+                        <div class="panel">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                                <div>
+                                    <div class="ptitle">Tyre Pressure PSI</div>
+                                    <div class="tyre-grid">
+                                        <div class="tyre-cell" id="tfl">
+                                            <div class="tyre-pos">FL</div>
+                                            <div class="tyre-val" id="tflVal">--</div>
+                                        </div>
+                                        <div class="tyre-cell" id="tfr">
+                                            <div class="tyre-pos">FR</div>
+                                            <div class="tyre-val" id="tfrVal">--</div>
+                                        </div>
+                                        <div class="tyre-cell" id="trl">
+                                            <div class="tyre-pos">RL</div>
+                                            <div class="tyre-val" id="trlVal">--</div>
+                                        </div>
+                                        <div class="tyre-cell" id="trr">
+                                            <div class="tyre-pos">RR</div>
+                                            <div class="tyre-val" id="trrVal">--</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="ptitle">ECU Telemetry</div>
+                                    <div class="status-list">
+                                        <div class="status-item"><span class="s-key">TORQUE Nm</span><span class="s-val"
+                                                id="s_torque">--</span></div>
+                                        <div class="status-item"><span class="s-key">BRAKE bar</span><span class="s-val"
+                                                id="s_brake">--</span></div>
+                                        <div class="status-item"><span class="s-key">IMPACT G</span><span class="s-val"
+                                                id="s_impact">--</span></div>
+                                        <div class="status-item"><span class="s-key">VOLTAGE V</span><span class="s-val"
+                                                id="s_voltage">--</span></div>
+                                        <div class="status-item"><span class="s-key">MOTOR MODE</span><span
+                                                class="s-val" id="s_mmode">--</span></div>
+                                        <div class="status-item"><span class="s-key">RECOVERED Wh</span><span
+                                                class="s-val" id="s_energy">--</span></div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="h-row">
-                                <div class="h-dot" id="motorDot"></div>
-                                <div class="h-lbl">MOTOR</div>
-                                <div class="h-val" id="motorVal">OFF</div>
+                        </div>
+                    </div>
+
+                    <!-- Col 4: DTC -->
+                    <div class="right-col">
+                        <div class="panel" style="overflow:hidden;min-height:0">
+                            <div class="ptitle">OBD-II Diagnostic Trouble Codes</div>
+                            <div class="dtc-panel" id="dtcPanel" style="max-height:calc(100% - 22px);overflow-y:auto">
+                                <div class="dtc-empty" id="dtcEmpty">✓ NO ACTIVE FAULTS</div>
                             </div>
-                            <div class="h-row">
-                                <div class="h-dot" id="regenDot"></div>
-                                <div class="h-lbl">REGEN</div>
-                                <div class="h-val" id="regenVal">0.0kW</div>
+                        </div>
+                        <div class="panel">
+                            <div class="ptitle">SOC + Temperature</div>
+                            <div class="graph-panel" style="height:100px"><canvas id="socChart"></canvas></div>
+                            <div class="graph-panel" style="height:90px;margin-top:6px"><canvas id="tempChart"></canvas>
                             </div>
-                            <div class="h-row">
-                                <div class="h-dot on" id="battDot"></div>
-                                <div class="h-lbl">BATTERY</div>
-                                <div class="h-val" id="battVal">--</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CAN LOGGER PAGE -->
+                <div class="page" id="pg-logger">
+
+                    <div class="logger-stat-row">
+                        <div class="stat-card" style="position:relative">
+                            <div class="stat-val" id="lg_total">0</div>
+                            <div class="stat-lbl">Total Messages</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="lg_rate">0</div>
+                            <div class="stat-lbl">Messages / Sec</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="lg_errors" style="color:var(--red)">0</div>
+                            <div class="stat-lbl">Bus Errors</div>
+                        </div>
+                        <div class="stat-card">
+                            <canvas id="busLoadRing" width="100" height="100"></canvas>
+                            <div class="stat-lbl" style="margin-top:4px">Bus Load</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="lg_file"
+                                style="font-size:11px;word-break:break-all;color:var(--sdim)">--
+                            </div>
+                            <div class="stat-lbl">Log File</div>
+                        </div>
+                    </div>
+
+                    <div class="panel" style="overflow:hidden;min-height:0">
+                        <div class="ptitle">Message Count Per ECU</div>
+                        <div id="ecuBarList" style="overflow-y:auto;max-height:calc(100% - 24px)"></div>
+                    </div>
+
+                    <div class="panel" style="overflow:hidden;min-height:0">
+                        <div class="ptitle">Top Active CAN IDs</div>
+                        <div id="topIdList" style="overflow-y:auto;max-height:calc(100% - 24px)"></div>
+                    </div>
+
+                    <div class="panel" style="overflow:hidden;min-height:0">
+                        <div class="ptitle">Bus Load History</div>
+                        <canvas id="busLoadChart" style="max-height:180px"></canvas>
+                        <div class="ptitle" style="margin-top:12px">CAN Bus Parameters</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+                            <div class="status-item"><span class="s-key">Protocol</span><span class="s-val">CAN
+                                    2.0B</span>
+                            </div>
+                            <div class="status-item"><span class="s-key">Speed</span><span class="s-val">500 kbps</span>
+                            </div>
+                            <div class="status-item"><span class="s-key">Max Frame</span><span class="s-val">8
+                                    bytes</span>
+                            </div>
+                            <div class="status-item"><span class="s-key">Termination</span><span
+                                    class="s-val">120Ω×2</span>
+                            </div>
+                            <div class="status-item"><span class="s-key">Jitter Avg</span><span class="s-val"
+                                    id="jitterAvg">0.00 ms</span>
+                            </div>
+                            <div class="status-item"><span class="s-key">Jitter Max</span><span class="s-val"
+                                    id="jitterMax">0.00 ms</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FAULT INJECTOR PAGE -->
+                <div class="page" id="pg-injector">
+
+                    <div class="inj-header-row">
+                        <input class="dtc-input" id="dtcInputField" placeholder="Enter DTC code  e.g. P0217"
+                            maxlength="6">
+                        <button class="inj-btn danger" onclick="injectManualDTC()">⚡ INJECT DTC</button>
+                        <button class="inj-btn success" onclick="resetAllFaults()">✓ RESET ALL</button>
+                        <div style="margin-left:auto;font-size:12px;font-weight:600;color:var(--sdim)">
+                            Active Scenario: <span id="activeScenario"
+                                style="color:var(--red);font-family:'JetBrains Mono',monospace">NONE</span>
+                        </div>
+                    </div>
+
+                    <div class="panel" style="overflow:hidden;min-height:0">
+                        <div class="ptitle">Fault Scenarios — Click to Inject</div>
+                        <div class="scenario-grid" id="scenarioGrid"></div>
+                    </div>
+
+                    <div class="panel" style="overflow:hidden;min-height:0">
+                        <div class="ptitle">Injection Log</div>
+                        <div class="inj-log" id="injLog">
+                            <div
+                                style="text-align:center;color:var(--tdim);font-size:12px;padding:20px;font-weight:600">
+                                No injections yet
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CYBERSECURITY PAGE -->
+                <div class="page" id="pg-security"
+                    style="display: none; flex-direction: column; gap: 12px; overflow-y: auto; padding: 12px; height: 100%;">
+
+                    <!-- TOP BAR: ATTACK BUTTONS -->
+                    <div
+                        style="display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 8px;">
+                            <button class="test-btn" id="atk_speed"
+                                style="background:var(--blue); color:white; min-width: 180px;"
+                                onclick="runAttack('SPOOF_SPEED')">⚡ SPOOF SPEED (255km/h)</button>
+                            <button class="test-btn" id="atk_brake"
+                                style="background:var(--blue); color:white; min-width: 180px;"
+                                onclick="runAttack('SPOOF_BRAKE')">⚡ SPOOF BRAKE (100bar)</button>
+                            <button class="test-btn" id="atk_dos"
+                                style="background:var(--red); color:white; min-width: 150px;"
+                                onclick="runAttack('DOS_FLOOD')">🔥 DoS FLOOD (0x000)</button>
+                            <button class="test-btn" style="background:var(--green); color:white; min-width: 150px;"
+                                onclick="runAttack('STOP_ALL')">✓ STOP ALL ATTACKS</button>
+                            <button class="test-btn" style="background:#e2e8f0; color:var(--white); min-width: 120px;"
+                                onclick="resetBus()">⚙️ RESET BUS</button>
+                        </div>
+                        <div style="font-size: 11px; font-weight: 800; color: var(--sdim);">
+                            IDS Status: <span id="idsStatus" style="color:var(--green);">ACTIVE</span>
+                        </div>
+                    </div>
+
+                    <!-- MIDDLE ROW: ALERTS & METRICS -->
+                    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; flex: 1; min-height: 0;">
+                        <!-- NETWORK SECURITY ALERTS -->
+                        <div class="panel" style="display: flex; flex-direction: column; overflow: hidden;">
+                            <div class="ptitle">NETWORK SECURITY ALERTS</div>
+                            <div id="idsAlertList" style="flex: 1; overflow-y: auto; padding-top: 8px;">
+                                <div class="dtc-empty">No security alerts detected</div>
+                            </div>
+                        </div>
+
+                        <!-- IDS METRICS -->
+                        <div class="panel" style="display: flex; flex-direction: column; overflow: hidden;">
+                            <div class="ptitle">INTRUSION DETECTION SYSTEM METRICS</div>
+                            <div class="status-list" style="padding-top: 10px;">
+                                <div class="status-item"><span class="s-key">Receive Error Counter (REC)</span><span
+                                        class="s-val" id="secRec">0</span></div>
+                                <div class="status-item"><span class="s-key">Transmit Error Counter (TEC)</span><span
+                                        class="s-val" id="secTec">0</span></div>
+                                <div class="status-item"><span class="s-key">CAN Bus State</span><span class="s-val"
+                                        id="secBusState"
+                                        style="color:var(--green); font-weight:800;">ERROR_ACTIVE</span></div>
+                                <div class="status-item"><span class="s-key">Total Collisions</span><span class="s-val"
+                                        id="secCollisions">0</span></div>
+                                <div class="status-item"><span class="s-key">Bus Load</span><span class="s-val"
+                                        id="secBusLoad">0.0%</span></div>
+                            </div>
+                            <div class="ptitle"
+                                style="margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px;">
+                                DETAILED IDS EVENT LOG</div>
+                            <div id="detailedSecLog" style="flex: 1; overflow-y: auto; padding-top: 8px;">
+                                <div class="dtc-empty">No security events in detailed log</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTTOM ROW: TEST MODE & INJECTIONS -->
+                    <div class="panel" style="display: flex; flex-direction: column;">
+                        <div class="ptitle" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>TEST MODE COMMAND CENTER (ADDITIONAL CONTROLS)</span>
+                            <div class="master-toggle-wrap">
+                                <span style="font-size: 8px; color: var(--sdim); margin-right: 4px;">OFF/ON</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="testModeMasterToggle" onchange="toggleTestModeMaster()">
+                                    <span class="slider-toggle"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="test-mode-section disabled" id="testModeControls"
+                            style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; padding-top: 15px;">
+                            <div>
+                                <div class="test-group-title">Precision Signal Injection (Manual Sliders)</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                                    <div class="ctrl-group">
+                                        <div class="ctrl-val-label"><span>Vehicle Speed</span><span class="ctrl-val-num"
+                                                id="ctrl_speed_val">0 km/h</span></div>
+                                        <input type="range" class="test-slider" min="0" max="200" value="0"
+                                            oninput="injectSignal('speed', this.value)">
+                                    </div>
+                                    <div class="ctrl-group">
+                                        <div class="ctrl-val-label"><span>Engine RPM</span><span class="ctrl-val-num"
+                                                id="ctrl_rpm_val">0</span></div>
+                                        <input type="range" class="test-slider" min="0" max="8000" value="0"
+                                            oninput="injectSignal('rpm', this.value)">
+                                    </div>
+                                    <div class="ctrl-group">
+                                        <div class="ctrl-val-label"><span>Brake Pressure</span><span
+                                                class="ctrl-val-num" id="ctrl_brake_val">0 bar</span></div>
+                                        <input type="range" class="test-slider" min="0" max="100" value="0"
+                                            oninput="injectSignal('brake', this.value)">
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="test-group-title">FMEA & Diagnostic Faults</div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <button class="test-btn" style="flex:1"
+                                        onclick="injectFault('engine_overheat')">Inject Engine Overheat</button>
+                                    <button class="test-btn" style="flex:1" onclick="injectFault('battery_low')">Inject
+                                        Battery Critical</button>
+                                    <button class="test-btn primary"
+                                        style="width:100%; justify-content:center; margin-top:5px"
+                                        onclick="resetAllOverrides()">Reset All Simulation Overrides</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="panel">
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                        <div>
-                            <div class="ptitle">Tyre Pressure PSI</div>
-                            <div class="tyre-grid">
-                                <div class="tyre-cell" id="tfl">
-                                    <div class="tyre-pos">FL</div>
-                                    <div class="tyre-val" id="tflVal">--</div>
-                                </div>
-                                <div class="tyre-cell" id="tfr">
-                                    <div class="tyre-pos">FR</div>
-                                    <div class="tyre-val" id="tfrVal">--</div>
-                                </div>
-                                <div class="tyre-cell" id="trl">
-                                    <div class="tyre-pos">RL</div>
-                                    <div class="tyre-val" id="trlVal">--</div>
-                                </div>
-                                <div class="tyre-cell" id="trr">
-                                    <div class="tyre-pos">RR</div>
-                                    <div class="tyre-val" id="trrVal">--</div>
-                                </div>
-                            </div>
+                <!-- REPORT PAGE -->
+                <div class="page" id="pg-report">
+
+                    <div class="report-header-row">
+                        <button class="inj-btn primary" onclick="generateReport()" id="reportBtn">
+                            📄 Generate Full PDF Report
+                        </button>
+                        <div id="reportStatus" style="font-size:12px;font-weight:600;color:var(--sdim)"></div>
+                    </div>
+
+                    <div class="panel" style="overflow:hidden;min-height:0;grid-column:1/-1">
+                        <div class="ptitle">AUTOSAR Software Component (SWC) Architecture</div>
+                        <div style="overflow:auto;max-height:400px">
+                            <table class="swc-table">
+                                <tr>
+                                    <th>SWC NAME</th>
+                                    <th>TYPE</th>
+                                    <th>BUS</th>
+                                    <th>CYCLE</th>
+                                    <th>INPUTS</th>
+                                    <th>OUTPUTS</th>
+                                </tr>
+                                <tr>
+                                    <td><strong>EngineECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-can">CAN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
+                                    <td>
+                                        <div class="io-in">DriveCycle.RPM</div>
+                                        <div class="io-in">DriveCycle.Speed</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">CAN[0x100]: RPM,Speed</div>
+                                        <div class="io-out">CAN[0x101]: Temp,Throttle</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ABSECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-can">CAN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
+                                    <td>
+                                        <div class="io-in">DriveCycle.Speed</div>
+                                        <div class="io-in">DriveCycle.Brake</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">CAN[0x200]: WheelSpeeds</div>
+                                        <div class="io-out">CAN[0x201]: Brake</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>AirbagECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-can">CAN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
+                                    <td>
+                                        <div class="io-in">AccelerometerSensor</div>
+                                        <div class="io-in">CAN[0x201]: Brake</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">CAN[0x300]: CrashStatus</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>TransmissionECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-can">CAN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
+                                    <td>
+                                        <div class="io-in">DriveCycle.Speed</div>
+                                        <div class="io-in">DriveCycle.RPM</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">CAN[0x400]: Gear,Mode</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>BMSECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-can">CAN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
+                                    <td>
+                                        <div class="io-in">HVBatterySensors</div>
+                                        <div class="io-in">DriveCycle.Phase</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">CAN[0x500]: SOC,Voltage</div>
+                                        <div class="io-out">CAN[0x501]: Temperature</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>MotorECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-can">CAN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
+                                    <td>
+                                        <div class="io-in">CAN[0x500]: SOC</div>
+                                        <div class="io-in">CAN[0x100]: Speed</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">CAN[0x600]: RPM,Torque</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>HybridControlECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
+                                    <td><span class="bus-tag bus-can">CAN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">50ms</td>
+                                    <td>
+                                        <div class="io-in">CAN[0x100,0x500,0x600]</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">CAN[0x800]: HybridMode</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>RegenBrakeECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-can">CAN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
+                                    <td>
+                                        <div class="io-in">CAN[0x201,0x600]</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">CAN[0x900]: RegenPower</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>TPMSECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-lin">LIN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">1000ms</td>
+                                    <td>
+                                        <div class="io-in">TyrePressureSensors×4</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">LIN[0x10]: Pressures</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>WindowSeatECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
+                                    <td><span class="bus-tag bus-lin">LIN</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">1000ms</td>
+                                    <td>
+                                        <div class="io-in">WindowSwitches</div>
+                                        <div class="io-in">RainSensor</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">LIN[0x20]: Positions</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>GatewayECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
+                                    <td><span class="bus-tag bus-mix">CAN+LIN+ETH</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
+                                    <td>
+                                        <div class="io-in">All CAN Messages</div>
+                                        <div class="io-in">All LIN Frames</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">ETH: VehicleState</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ADASECU</strong></td>
+                                    <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
+                                    <td><span class="bus-tag bus-eth">Ethernet</span></td>
+                                    <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
+                                    <td>
+                                        <div class="io-in">ETH: VehicleState</div>
+                                    </td>
+                                    <td>
+                                        <div class="io-out">ETH: ADASDecisions</div>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
-                        <div>
-                            <div class="ptitle">ECU Telemetry</div>
-                            <div class="status-list">
-                                <div class="status-item"><span class="s-key">TORQUE Nm</span><span class="s-val"
-                                        id="s_torque">--</span></div>
-                                <div class="status-item"><span class="s-key">BRAKE bar</span><span class="s-val"
-                                        id="s_brake">--</span></div>
-                                <div class="status-item"><span class="s-key">IMPACT G</span><span class="s-val"
-                                        id="s_impact">--</span></div>
-                                <div class="status-item"><span class="s-key">VOLTAGE V</span><span class="s-val"
-                                        id="s_voltage">--</span></div>
-                                <div class="status-item"><span class="s-key">MOTOR MODE</span><span class="s-val"
-                                        id="s_mmode">--</span></div>
-                                <div class="status-item"><span class="s-key">RECOVERED Wh</span><span class="s-val"
-                                        id="s_energy">--</span></div>
-                            </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="ptitle">Network Traffic Analysis</div>
+                        <div class="status-list" id="reportTrafficList">
+                            <div class="status-item"><span class="s-key">Total Bus Messages</span><span class="s-val"
+                                    id="rpt_total">0</span></div>
+                            <div class="status-item"><span class="s-key">Bus Utilization</span><span class="s-val"
+                                    id="rpt_load">0.0%</span></div>
+                            <div class="status-item"><span class="s-key">Error Frame Count</span><span class="s-val"
+                                    id="rpt_errors">0</span></div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Col 4: DTC -->
-            <div class="right-col">
-                <div class="panel" style="overflow:hidden;min-height:0">
-                    <div class="ptitle">OBD-II Diagnostic Trouble Codes</div>
-                    <div class="dtc-panel" id="dtcPanel" style="max-height:calc(100% - 22px);overflow-y:auto">
-                        <div class="dtc-empty" id="dtcEmpty">✓ NO ACTIVE FAULTS</div>
+                    <div class="panel">
+                        <div class="ptitle">Active Diagnostic Faults</div>
+                        <div class="dtc-panel" id="reportDtcList">
+                            <div class="dtc-empty">No active faults detected</div>
+                        </div>
                     </div>
+
+                </div> <!-- End of page-container -->
+
+                <!-- ADAS Bar -->
+                <div class="adas-bar">
+                    <span class="adas-label">ADAS Status</span>
+                    <span class="adas-pill" id="a_collision">COLLISION</span>
+                    <span class="adas-pill" id="a_brake">EBRAKE</span>
+                    <span class="adas-pill" id="a_overspeed">OVERSPEED</span>
+                    <span class="adas-pill" id="a_overheat">OVERHEAT</span>
+                    <span class="adas-pill" id="a_battery">BATTERY</span>
+                    <span class="adas-pill" id="a_tyre">TYRE</span>
+                    <span class="adas-pill" id="a_airbag">AIRBAG</span>
+                    <span class="adas-pill" id="a_regen">REGEN</span>
                 </div>
-                <div class="panel">
-                    <div class="ptitle">SOC + Temperature</div>
-                    <div class="graph-panel" style="height:100px"><canvas id="socChart"></canvas></div>
-                    <div class="graph-panel" style="height:90px;margin-top:6px"><canvas id="tempChart"></canvas></div>
-                </div>
-            </div>
+        </main>
 
-        </div>
+        <div id="toast-container"></div>
 
-        <!-- CAN LOGGER PAGE -->
-        <div class="page" id="pg-logger">
+        <script>
+            // ── Test Panel Logic ──────────────────────────────────────────
+            let activeAttacks = { speed_spoof: false, brake_spoof: false, dos: false };
+            let idsActive = true;
 
-            <div class="logger-stat-row">
-                <div class="stat-card" style="position:relative">
-                    <div class="stat-val" id="lg_total">0</div>
-                    <div class="stat-lbl">Total Messages</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-val" id="lg_rate">0</div>
-                    <div class="stat-lbl">Messages / Sec</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-val" id="lg_errors" style="color:var(--red)">0</div>
-                    <div class="stat-lbl">Bus Errors</div>
-                </div>
-                <div class="stat-card">
-                    <canvas id="busLoadRing" width="100" height="100"></canvas>
-                    <div class="stat-lbl" style="margin-top:4px">Bus Load</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-val" id="lg_file" style="font-size:11px;word-break:break-all;color:var(--sdim)">--
-                    </div>
-                    <div class="stat-lbl">Log File</div>
-                </div>
-            </div>
+            function toggleTestModeMaster() {
+                const isChecked = document.getElementById('testModeMasterToggle').checked;
+                const controls = document.getElementById('testModeControls');
+                controls.classList.toggle('disabled', !isChecked);
 
-            <div class="panel" style="overflow:hidden;min-height:0">
-                <div class="ptitle">Message Count Per ECU</div>
-                <div id="ecuBarList" style="overflow-y:auto;max-height:calc(100% - 24px)"></div>
-            </div>
+                // Sync with top indicator
+                document.getElementById('testModePill').style.display = isChecked ? 'inline-block' : 'none';
+            }
 
-            <div class="panel" style="overflow:hidden;min-height:0">
-                <div class="ptitle">Top Active CAN IDs</div>
-                <div id="topIdList" style="overflow-y:auto;max-height:calc(100% - 24px)"></div>
-            </div>
+            function toggleFreeze() {
+                fetch('/api/freeze', { method: 'POST' }).then(r => r.json()).then(d => {
+                    const btn = document.getElementById('freezeBtn');
+                    btn.textContent = d.frozen ? '▶ RESUME SIM' : '⏸ FREEZE SIM';
+                    btn.style.background = d.frozen ? 'var(--gold)' : '#6366f1';
+                    showToast(d.frozen ? 'SIMULATION FROZEN' : 'SIMULATION RESUMED',
+                        d.frozen ? 'Scheduler paused but telemetry remains visible.' : 'Real-time updates resumed.',
+                        d.frozen ? 'WARNING' : 'SUCCESS');
+                });
+            }
 
-            <div class="panel" style="overflow:hidden;min-height:0">
-                <div class="ptitle">Bus Load History</div>
-                <canvas id="busLoadChart" style="max-height:180px"></canvas>
-                <div class="ptitle" style="margin-top:12px">CAN Bus Parameters</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
-                    <div class="status-item"><span class="s-key">Protocol</span><span class="s-val">CAN 2.0B</span>
-                    </div>
-                    <div class="status-item"><span class="s-key">Speed</span><span class="s-val">500 kbps</span></div>
-                    <div class="status-item"><span class="s-key">Max Frame</span><span class="s-val">8 bytes</span>
-                    </div>
-                    <div class="status-item"><span class="s-key">Termination</span><span class="s-val">120Ω×2</span>
-                    </div>
-                </div>
-            </div>
+            function injectSignal(type, val) {
+                document.getElementById(`ctrl_${type}_val`).textContent = val + (type === 'rpm' ? '' : (type === 'speed' ? ' km/h' : ' bar'));
+                fetch(`/api/inject_${type}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ value: val })
+                });
+            }
 
-        </div>
+            function toggleAttack(type) {
+                activeAttacks[type] = !activeAttacks[type];
+                document.getElementById(`atk_${type}`).classList.toggle('active', activeAttacks[type]);
+                fetch(`/api/attack/${type}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ active: activeAttacks[type] })
+                });
+            }
 
-        <!-- FAULT INJECTOR PAGE -->
-        <div class="page" id="pg-injector">
+            function runAttack(cmd) {
+                if (cmd === 'STOP_ALL') {
+                    activeAttacks = { speed_spoof: false, brake_spoof: false, dos: false };
+                    document.querySelectorAll('.test-btn').forEach(btn => btn.classList.remove('active'));
+                    fetch('/api/attack/speed_spoof', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: false }) });
+                    fetch('/api/attack/brake_spoof', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: false }) });
+                    fetch('/api/attack/dos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: false }) });
+                    showToast('ATTACKS HALTED', 'All malicious network activity stopped.', 'SUCCESS');
+                } else if (cmd === 'SPOOF_SPEED') {
+                    toggleAttack('speed_spoof');
+                } else if (cmd === 'SPOOF_BRAKE') {
+                    toggleAttack('brake_spoof');
+                } else if (cmd === 'DOS_FLOOD') {
+                    toggleAttack('dos');
+                }
+            }
 
-            <div class="inj-header-row">
-                <input class="dtc-input" id="dtcInputField" placeholder="Enter DTC code  e.g. P0217" maxlength="6">
-                <button class="inj-btn danger" onclick="injectManualDTC()">⚡ INJECT DTC</button>
-                <button class="inj-btn success" onclick="resetAllFaults()">✓ RESET ALL</button>
-                <div style="margin-left:auto;font-size:12px;font-weight:600;color:var(--sdim)">
-                    Active Scenario: <span id="activeScenario"
-                        style="color:var(--red);font-family:'JetBrains Mono',monospace">NONE</span>
-                </div>
-            </div>
+            function resetBus() {
+                fetch('/api/reset_bus', { method: 'POST' }).then(() => {
+                    showToast('BUS RESET', 'CAN network counters cleared.', 'SUCCESS');
+                });
+            }
 
-            <div class="panel" style="overflow:hidden;min-height:0">
-                <div class="ptitle">Fault Scenarios — Click to Inject</div>
-                <div class="scenario-grid" id="scenarioGrid"></div>
-            </div>
+            function injectFault(type) {
+                fetch(`/api/fault/${type}`, { method: 'POST' });
+                showToast('FAULT INJECTED', `Scenario: ${type.replace('_', ' ')} triggered.`, 'WARNING');
+            }
 
-            <div class="panel" style="overflow:hidden;min-height:0">
-                <div class="ptitle">Injection Log</div>
-                <div class="inj-log" id="injLog">
-                    <div style="text-align:center;color:var(--tdim);font-size:12px;padding:20px;font-weight:600">
-                        No injections yet
-                    </div>
-                </div>
-            </div>
+            function toggleIDS() {
+                idsActive = !idsActive;
+                const btn = document.getElementById('ids_toggle');
+                btn.textContent = idsActive ? 'Disable IDS Detection' : 'Enable IDS Detection';
+                btn.classList.toggle('active', idsActive);
 
-        </div>
+                const status = document.getElementById('idsStatus');
+                if (status) {
+                    status.textContent = idsActive ? 'ACTIVE' : 'DISABLED';
+                    status.style.color = idsActive ? 'var(--green)' : 'var(--tdim)';
+                }
 
-        <!-- REPORT PAGE -->
-        <div class="page" id="pg-report">
+                fetch('/api/ids/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ active: idsActive })
+                });
+            }
 
-            <div class="report-header-row">
-                <button class="inj-btn primary" onclick="generateReport()" id="reportBtn">
-                    📄 Generate AUTOSAR Report
-                </button>
-                <div id="reportStatus" style="font-size:12px;font-weight:600;color:var(--sdim)"></div>
-            </div>
+            function resetAllOverrides() {
+                fetch('/api/reset_scenario', { method: 'POST' }).then(() => {
+                    location.reload(); // Hard reset for UI consistency
+                });
+            }
 
-            <div class="panel" style="overflow:hidden;min-height:0;grid-column:1/-1">
-                <div class="ptitle">AUTOSAR Software Component (SWC) Architecture</div>
-                <div style="overflow:auto;max-height:calc(100% - 24px)">
-                    <table class="swc-table">
-                        <tr>
-                            <th>SWC NAME</th>
-                            <th>TYPE</th>
-                            <th>BUS</th>
-                            <th>CYCLE</th>
-                            <th>INPUTS</th>
-                            <th>OUTPUTS</th>
-                        </tr>
-                        <tr>
-                            <td><strong>EngineECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-can">CAN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
-                            <td>
-                                <div class="io-in">DriveCycle.RPM</div>
-                                <div class="io-in">DriveCycle.Speed</div>
-                            </td>
-                            <td>
-                                <div class="io-out">CAN[0x100]: RPM,Speed</div>
-                                <div class="io-out">CAN[0x101]: Temp,Throttle</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>ABSECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-can">CAN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
-                            <td>
-                                <div class="io-in">DriveCycle.Speed</div>
-                                <div class="io-in">DriveCycle.Brake</div>
-                            </td>
-                            <td>
-                                <div class="io-out">CAN[0x200]: WheelSpeeds</div>
-                                <div class="io-out">CAN[0x201]: Brake</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>AirbagECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-can">CAN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
-                            <td>
-                                <div class="io-in">AccelerometerSensor</div>
-                                <div class="io-in">CAN[0x201]: Brake</div>
-                            </td>
-                            <td>
-                                <div class="io-out">CAN[0x300]: CrashStatus</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>TransmissionECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-can">CAN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
-                            <td>
-                                <div class="io-in">DriveCycle.Speed</div>
-                                <div class="io-in">DriveCycle.RPM</div>
-                            </td>
-                            <td>
-                                <div class="io-out">CAN[0x400]: Gear,Mode</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>BMSECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-can">CAN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
-                            <td>
-                                <div class="io-in">HVBatterySensors</div>
-                                <div class="io-in">DriveCycle.Phase</div>
-                            </td>
-                            <td>
-                                <div class="io-out">CAN[0x500]: SOC,Voltage</div>
-                                <div class="io-out">CAN[0x501]: Temperature</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>MotorECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-can">CAN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">10ms</td>
-                            <td>
-                                <div class="io-in">CAN[0x500]: SOC</div>
-                                <div class="io-in">CAN[0x100]: Speed</div>
-                            </td>
-                            <td>
-                                <div class="io-out">CAN[0x600]: RPM,Torque</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>HybridControlECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
-                            <td><span class="bus-tag bus-can">CAN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">50ms</td>
-                            <td>
-                                <div class="io-in">CAN[0x100,0x500,0x600]</div>
-                            </td>
-                            <td>
-                                <div class="io-out">CAN[0x800]: HybridMode</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>RegenBrakeECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-can">CAN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">20ms</td>
-                            <td>
-                                <div class="io-in">CAN[0x201,0x600]</div>
-                            </td>
-                            <td>
-                                <div class="io-out">CAN[0x900]: RegenPower</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>TPMSECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-lin">LIN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">1000ms</td>
-                            <td>
-                                <div class="io-in">TyrePressureSensors×4</div>
-                            </td>
-                            <td>
-                                <div class="io-out">LIN[0x10]: Pressures</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>WindowSeatECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">AtomicSWC</td>
-                            <td><span class="bus-tag bus-lin">LIN</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">1000ms</td>
-                            <td>
-                                <div class="io-in">WindowSwitches</div>
-                                <div class="io-in">RainSensor</div>
-                            </td>
-                            <td>
-                                <div class="io-out">LIN[0x20]: Positions</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>GatewayECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
-                            <td><span class="bus-tag bus-mix">CAN+LIN+ETH</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
-                            <td>
-                                <div class="io-in">All CAN Messages</div>
-                                <div class="io-in">All LIN Frames</div>
-                            </td>
-                            <td>
-                                <div class="io-out">ETH: VehicleState</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong>ADASECU</strong></td>
-                            <td style="color:var(--sdim);font-size:10px">CompositionSWC</td>
-                            <td><span class="bus-tag bus-eth">Ethernet</span></td>
-                            <td style="font-family:'JetBrains Mono',monospace;color:var(--gold)">100ms</td>
-                            <td>
-                                <div class="io-in">ETH: VehicleState</div>
-                            </td>
-                            <td>
-                                <div class="io-out">ETH: ADASDecisions</div>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+            function showToast(title, msg, severity) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                if (severity === 'CRITICAL') toast.style.borderLeftColor = 'var(--red)';
+                toast.innerHTML = `<div class="toast-title">${title}</div><div class="toast-msg">${msg}</div>`;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 400);
+                }, 3000);
+            }
 
-        </div>
+            // ── Tab switching ──────────────────────────────────────────────
+            function switchTab(name) {
+                const tabs = document.querySelectorAll('.tab');
+                const pages = document.querySelectorAll('.page');
+                const tabNames = ['main', 'logger', 'injector', 'security', 'report'];
 
-        <!-- ADAS Bar -->
-        <div class="adas-bar">
-            <span class="adas-label">ADAS</span>
-            <span class="adas-pill" id="a_collision">COLLISION</span>
-            <span class="adas-pill" id="a_brake">EMERGENCY BRAKE</span>
-            <span class="adas-pill" id="a_overspeed">OVERSPEED</span>
-            <span class="adas-pill" id="a_overheat">OVERHEAT</span>
-            <span class="adas-pill" id="a_battery">BATTERY</span>
-            <span class="adas-pill" id="a_tyre">TYRE</span>
-            <span class="adas-pill" id="a_airbag">AIRBAG</span>
-            <span class="adas-pill" id="a_regen">REGEN AVAIL</span>
-        </div>
+                tabs.forEach((t, i) => t.classList.toggle('active', tabNames[i] === name));
+                pages.forEach(p => {
+                    const isActive = p.id === 'pg-' + name;
+                    p.classList.toggle('active', isActive);
+                    if (isActive) {
+                        p.style.display = (name === 'security' || name === 'report') ? 'flex' : 'grid';
+                    } else {
+                        p.style.display = 'none';
+                    }
+                });
+            }
 
-    </div>
+            // ── Clock ─────────────────────────────────────────────────────
+            setInterval(() => {
+                document.getElementById('clock').textContent =
+                    new Date().toTimeString().slice(0, 8);
+            }, 1000);
 
-    <script>
-        // ── Tab switching ──────────────────────────────────────────────
-        function switchTab(name) {
-            document.querySelectorAll('.tab').forEach((t, i) => {
-                const names = ['main', 'logger', 'injector', 'report'];
-                t.classList.toggle('active', names[i] === name);
-            });
-            document.querySelectorAll('.page').forEach(p => {
-                p.classList.toggle('active', p.id === 'pg-' + name);
-            });
-        }
-
-        // ── Clock ─────────────────────────────────────────────────────
-        setInterval(() => {
-            document.getElementById('clock').textContent =
-                new Date().toTimeString().slice(0, 8);
-        }, 1000);
-
-        // ── Gauge Drawing ──────────────────────────────────────────────
-        function drawGauge(id, value, max, label, unit, color, big = false) {
-            const canvas = document.getElementById(id);
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const W = canvas.width, H = canvas.height;
-            const cx = W / 2, cy = H / 2 + (big ? 8 : 4);
-            const R = W * (big ? 0.38 : 0.36);
-            const S = Math.PI * 0.75, E = Math.PI * 2.25;
-            const pct = Math.min(1, Math.max(0, value / max));
-            ctx.clearRect(0, 0, W, H);
-            ctx.beginPath(); ctx.arc(cx, cy, R, S, E);
-            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = big ? 12 : 9;
-            ctx.lineCap = 'round'; ctx.stroke();
-            if (pct > 0) {
-                const g = ctx.createLinearGradient(cx - R, cy, cx + R, cy);
-                g.addColorStop(0, color); g.addColorStop(1, color + 'aa');
-                ctx.beginPath(); ctx.arc(cx, cy, R, S, S + pct * (E - S));
-                ctx.strokeStyle = g; ctx.lineWidth = big ? 12 : 9;
+            // ── Gauge Drawing ──────────────────────────────────────────────
+            function drawGauge(id, value, max, label, unit, color, big = false) {
+                const canvas = document.getElementById(id);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const W = canvas.width, H = canvas.height;
+                const cx = W / 2, cy = H / 2 + (big ? 8 : 4);
+                const R = W * (big ? 0.38 : 0.36);
+                const S = Math.PI * 0.75, E = Math.PI * 2.25;
+                const pct = Math.min(1, Math.max(0, value / max));
+                ctx.clearRect(0, 0, W, H);
+                ctx.beginPath(); ctx.arc(cx, cy, R, S, E);
+                ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = big ? 12 : 9;
                 ctx.lineCap = 'round'; ctx.stroke();
+                if (pct > 0) {
+                    const g = ctx.createLinearGradient(cx - R, cy, cx + R, cy);
+                    g.addColorStop(0, color); g.addColorStop(1, color + 'aa');
+                    ctx.beginPath(); ctx.arc(cx, cy, R, S, S + pct * (E - S));
+                    ctx.strokeStyle = g; ctx.lineWidth = big ? 12 : 9;
+                    ctx.lineCap = 'round'; ctx.stroke();
+                }
+                const ticks = big ? 11 : 7;
+                for (let i = 0; i <= ticks; i++) {
+                    const a = S + (i / ticks) * (E - S);
+                    const r1 = R + 4, r2 = R + (i % Math.ceil(ticks / 2) === 0 ? 13 : 7);
+                    ctx.beginPath();
+                    ctx.moveTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a));
+                    ctx.lineTo(cx + r2 * Math.cos(a), cy + r2 * Math.sin(a));
+                    ctx.strokeStyle = i % Math.ceil(ticks / 2) === 0 ? '#94a3b8' : '#cbd5e1';
+                    ctx.lineWidth = i % Math.ceil(ticks / 2) === 0 ? 2 : 1; ctx.stroke();
+                }
+                const na = S + pct * (E - S);
+                ctx.save(); ctx.translate(cx, cy); ctx.rotate(na);
+                ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(R * 0.70, 0);
+                ctx.strokeStyle = '#334155'; ctx.lineWidth = big ? 2.5 : 2;
+                ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
+                ctx.beginPath(); ctx.arc(cx, cy, big ? 7 : 5, 0, Math.PI * 2);
+                ctx.fillStyle = color; ctx.fill();
+                ctx.font = `bold ${big ? '26px' : '18px'} 'JetBrains Mono',monospace`;
+                ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center';
+                ctx.fillText(Math.round(value), cx, cy + (big ? 34 : 26));
+                ctx.font = `700 ${big ? '9px' : '8px'} Inter,sans-serif`;
+                ctx.fillStyle = color;
+                ctx.fillText(label, cx, cy + (big ? 50 : 39));
+                ctx.font = `${big ? '8px' : '7px'} Inter,sans-serif`;
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(unit, cx, cy + (big ? 62 : 50));
             }
-            const ticks = big ? 11 : 7;
-            for (let i = 0; i <= ticks; i++) {
-                const a = S + (i / ticks) * (E - S);
-                const r1 = R + 4, r2 = R + (i % Math.ceil(ticks / 2) === 0 ? 13 : 7);
-                ctx.beginPath();
-                ctx.moveTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a));
-                ctx.lineTo(cx + r2 * Math.cos(a), cy + r2 * Math.sin(a));
-                ctx.strokeStyle = i % Math.ceil(ticks / 2) === 0 ? '#94a3b8' : '#cbd5e1';
-                ctx.lineWidth = i % Math.ceil(ticks / 2) === 0 ? 2 : 1; ctx.stroke();
+
+            function drawBusLoadRing(pct) {
+                const canvas = document.getElementById('busLoadRing');
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const cx = 50, cy = 50, R = 38;
+                ctx.clearRect(0, 0, 100, 100);
+                ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 8; ctx.stroke();
+                const end = -Math.PI / 2 + (pct / 100) * Math.PI * 2;
+                ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, end);
+                const color = pct > 70 ? '#dc2626' : pct > 40 ? '#d97706' : '#2563eb';
+                ctx.strokeStyle = color; ctx.lineWidth = 8;
+                ctx.lineCap = 'round'; ctx.stroke();
+                ctx.font = 'bold 18px JetBrains Mono,monospace';
+                ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(pct.toFixed(0) + '%', cx, cy);
             }
-            const na = S + pct * (E - S);
-            ctx.save(); ctx.translate(cx, cy); ctx.rotate(na);
-            ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(R * 0.70, 0);
-            ctx.strokeStyle = '#334155'; ctx.lineWidth = big ? 2.5 : 2;
-            ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
-            ctx.beginPath(); ctx.arc(cx, cy, big ? 7 : 5, 0, Math.PI * 2);
-            ctx.fillStyle = color; ctx.fill();
-            ctx.font = `bold ${big ? '26px' : '18px'} 'JetBrains Mono',monospace`;
-            ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center';
-            ctx.fillText(Math.round(value), cx, cy + (big ? 34 : 26));
-            ctx.font = `700 ${big ? '9px' : '8px'} Inter,sans-serif`;
-            ctx.fillStyle = color;
-            ctx.fillText(label, cx, cy + (big ? 50 : 39));
-            ctx.font = `${big ? '8px' : '7px'} Inter,sans-serif`;
-            ctx.fillStyle = '#94a3b8';
-            ctx.fillText(unit, cx, cy + (big ? 62 : 50));
-        }
 
-        function drawBusLoadRing(pct) {
-            const canvas = document.getElementById('busLoadRing');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const cx = 50, cy = 50, R = 38;
-            ctx.clearRect(0, 0, 100, 100);
-            ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2);
-            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 8; ctx.stroke();
-            const end = -Math.PI / 2 + (pct / 100) * Math.PI * 2;
-            ctx.beginPath(); ctx.arc(cx, cy, R, -Math.PI / 2, end);
-            const color = pct > 70 ? '#dc2626' : pct > 40 ? '#d97706' : '#2563eb';
-            ctx.strokeStyle = color; ctx.lineWidth = 8;
-            ctx.lineCap = 'round'; ctx.stroke();
-            ctx.font = 'bold 18px JetBrains Mono,monospace';
-            ctx.fillStyle = '#1e293b'; ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(pct.toFixed(0) + '%', cx, cy);
-        }
+            // ── Charts ────────────────────────────────────────────────────
+            const MAX_PTS = 60;
+            function makeChart(id, color, yMax) {
+                const ctx = document.getElementById(id).getContext('2d');
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array(MAX_PTS).fill(''),
+                        datasets: [{
+                            data: Array(MAX_PTS).fill(0), borderColor: color,
+                            borderWidth: 1.5, fill: true, backgroundColor: color + '18',
+                            tension: 0.4, pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        animation: { duration: 0 }, plugins: { legend: { display: false } },
+                        scales: {
+                            x: { display: false },
+                            y: {
+                                min: 0, max: yMax,
+                                grid: { color: 'rgba(203,213,225,0.6)', lineWidth: 1 },
+                                ticks: { color: '#64748b', font: { size: 9, family: 'Inter' }, maxTicksLimit: 4 },
+                                border: { color: '#e2e8f0' }
+                            }
+                        }
+                    }
+                });
+            }
 
-        // ── Charts ────────────────────────────────────────────────────
-        const MAX_PTS = 60;
-        function makeChart(id, color, yMax) {
-            const ctx = document.getElementById(id).getContext('2d');
-            return new Chart(ctx, {
+            const busLoadChart = new Chart(
+                document.getElementById('busLoadChart').getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: Array(MAX_PTS).fill(''),
+                    labels: Array(60).fill(''),
                     datasets: [{
-                        data: Array(MAX_PTS).fill(0), borderColor: color,
-                        borderWidth: 1.5, fill: true, backgroundColor: color + '18',
+                        data: Array(60).fill(0), borderColor: '#2563eb',
+                        borderWidth: 1.5, fill: true, backgroundColor: '#2563eb18',
                         tension: 0.4, pointRadius: 0
                     }]
                 },
@@ -1659,407 +2429,547 @@
                     scales: {
                         x: { display: false },
                         y: {
-                            min: 0, max: yMax,
-                            grid: { color: 'rgba(203,213,225,0.6)', lineWidth: 1 },
-                            ticks: { color: '#64748b', font: { size: 9, family: 'Inter' }, maxTicksLimit: 4 },
+                            min: 0, max: 100,
+                            grid: { color: 'rgba(203,213,225,0.6)' },
+                            ticks: { color: '#64748b', font: { size: 9 } },
                             border: { color: '#e2e8f0' }
                         }
                     }
                 }
             });
-        }
 
-        const busLoadChart = new Chart(
-            document.getElementById('busLoadChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: Array(60).fill(''),
-                datasets: [{
-                    data: Array(60).fill(0), borderColor: '#2563eb',
-                    borderWidth: 1.5, fill: true, backgroundColor: '#2563eb18',
-                    tension: 0.4, pointRadius: 0
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                animation: { duration: 0 }, plugins: { legend: { display: false } },
-                scales: {
-                    x: { display: false },
-                    y: {
-                        min: 0, max: 100,
-                        grid: { color: 'rgba(203,213,225,0.6)' },
-                        ticks: { color: '#64748b', font: { size: 9 } },
-                        border: { color: '#e2e8f0' }
-                    }
+            const charts = {
+                speed: makeChart('speedChart', '#2563eb', 140),
+                rpm: makeChart('rpmChart', '#0891b2', 5000),
+                soc: makeChart('socChart', '#059669', 100),
+                temp: makeChart('tempChart', '#d97706', 110),
+            };
+
+            function pushChart(c, v) {
+                c.data.datasets[0].data.push(v);
+                c.data.labels.push('');
+                if (c.data.datasets[0].data.length > MAX_PTS) {
+                    c.data.datasets[0].data.shift();
+                    c.data.labels.shift();
                 }
+                c.update('none');
             }
-        });
 
-        const charts = {
-            speed: makeChart('speedChart', '#2563eb', 140),
-            rpm: makeChart('rpmChart', '#0891b2', 5000),
-            soc: makeChart('socChart', '#059669', 100),
-            temp: makeChart('tempChart', '#d97706', 110),
-        };
-
-        function pushChart(c, v) {
-            c.data.datasets[0].data.push(v);
-            c.data.labels.push('');
-            if (c.data.datasets[0].data.length > MAX_PTS) {
-                c.data.datasets[0].data.shift();
-                c.data.labels.shift();
-            }
-            c.update('none');
-        }
-
-        // ── ECU Boot List ─────────────────────────────────────────────
-        const ECU_LIST = ['BMS', 'ENGINE', 'ABS', 'AIRBAG', 'TRANSMISSION',
-            'MOTOR', 'HYBRID_CTRL', 'REGEN_BRAKE', 'TPMS','WINDOW_SEAT', 'GATEWAY', 'ADAS'];
-        const ecuBootList = document.getElementById('ecuBootList');
-        ECU_LIST.forEach(ecu => {
-            const row = document.createElement('div');
-            row.className = 'ecu-row';
-            row.innerHTML = `<span class="ecu-name">${ecu}</span>
+            // ── ECU Boot List ─────────────────────────────────────────────
+            const ECU_LIST = ['BMS', 'ENGINE', 'ABS', 'AIRBAG', 'TRANSMISSION',
+                'MOTOR', 'HYBRID_CTRL', 'REGEN_BRAKE', 'TPMS', 'WINDOW_SEAT', 'GATEWAY', 'ADAS'];
+            const ecuBootList = document.getElementById('ecuBootList');
+            ECU_LIST.forEach(ecu => {
+                const row = document.createElement('div');
+                row.className = 'ecu-row';
+                row.innerHTML = `<span class="ecu-name">${ecu}</span>
     <div class="ecu-dot" id="ecu_${ecu}"></div>`;
-            ecuBootList.appendChild(row);
-        });
+                ecuBootList.appendChild(row);
+            });
 
-        // Smooth gauge animation
-        let currentGauges = { speed: 0, rpm: 0, temp: 25 };
-        let targetGauges = { speed: 0, rpm: 0, temp: 25 };
+            // Smooth gauge animation
+            let currentGauges = { speed: 0, rpm: 0, temp: 25 };
+            let targetGauges = { speed: 0, rpm: 0, temp: 25 };
 
-        function animateGauges() {
-            const lerp = (c, t, factor) => c + (t - c) * factor;
-            currentGauges.speed = lerp(currentGauges.speed, targetGauges.speed, 0.1);
-            currentGauges.rpm = lerp(currentGauges.rpm, targetGauges.rpm, 0.1);
-            currentGauges.temp = lerp(currentGauges.temp, targetGauges.temp, 0.1);
+            function animateGauges() {
+                const lerp = (c, t, factor) => c + (t - c) * factor;
+                currentGauges.speed = lerp(currentGauges.speed, targetGauges.speed, 0.1);
+                currentGauges.rpm = lerp(currentGauges.rpm, targetGauges.rpm, 0.1);
+                currentGauges.temp = lerp(currentGauges.temp, targetGauges.temp, 0.1);
 
-            drawGauge('speedGauge', currentGauges.speed, 140, 'SPEED', 'km/h', '#2563eb', true);
-            drawGauge('rpmGauge', currentGauges.rpm, 5000, 'RPM', 'rpm', '#0891b2');
-            drawGauge('tempGauge', currentGauges.temp, 110, 'TEMP', '°C', '#d97706');
+                drawGauge('speedGauge', currentGauges.speed, 140, 'SPEED', 'km/h', '#2563eb', true);
+                drawGauge('rpmGauge', currentGauges.rpm, 5000, 'RPM', 'rpm', '#0891b2');
+                drawGauge('tempGauge', currentGauges.temp, 110, 'TEMP', '°C', '#d97706');
 
+                requestAnimationFrame(animateGauges);
+            }
             requestAnimationFrame(animateGauges);
-        }
-        requestAnimationFrame(animateGauges);
-        drawBusLoadRing(0);
+            drawBusLoadRing(0);
 
-        // ── Scenario Grid ─────────────────────────────────────────────
-        const SCENARIOS_LOCAL = {
-            battery_failure: { name: 'HV Battery Failure', desc: 'Complete HV battery pack failure', dtcs: ['P0A80', 'P1A00', 'P1A05'] },
-            engine_overheat: { name: 'Engine Overheating', desc: 'Coolant system failure simulation', dtcs: ['P0217'] },
-            abs_failure: { name: 'ABS System Failure', desc: 'All wheel speed sensor failures', dtcs: ['C0035', 'C0040', 'C0045', 'C0050'] },
-            tyre_blowout: { name: 'Tyre Blowout', desc: 'Front-left tyre sudden blowout', dtcs: ['C0750', 'C0775'] },
-            crash_event: { name: 'Collision Event', desc: 'Frontal collision + airbag deploy', dtcs: ['B0001', 'B0002'] },
-            can_bus_fault: { name: 'CAN Bus Fault', desc: 'Network communication failure', dtcs: ['U0001', 'U0100'] },
-            motor_failure: { name: 'Motor Failure', desc: 'Electric motor system fault', dtcs: ['P0A00', 'P0A0F'] },
-            full_emergency: { name: 'Full Emergency', desc: 'Complete vehicle emergency', dtcs: ['P0217', 'B0001', 'P1A00'] },
-        };
+            // ── Scenario Grid ─────────────────────────────────────────────
+            const SCENARIOS_LOCAL = {
+                battery_failure: { name: 'HV Battery Failure', desc: 'Complete HV battery pack failure', dtcs: ['P0A80', 'P1A00', 'P1A05'] },
+                engine_overheat: { name: 'Engine Overheating', desc: 'Coolant system failure simulation', dtcs: ['P0217'] },
+                abs_failure: { name: 'ABS System Failure', desc: 'All wheel speed sensor failures', dtcs: ['C0035', 'C0040', 'C0045', 'C0050'] },
+                tyre_blowout: { name: 'Tyre Blowout', desc: 'Front-left tyre sudden blowout', dtcs: ['C0750', 'C0775'] },
+                crash_event: { name: 'Collision Event', desc: 'Frontal collision + airbag deploy', dtcs: ['B0001', 'B0002'] },
+                can_bus_fault: { name: 'CAN Bus Fault', desc: 'Network communication failure', dtcs: ['U0001', 'U0100'] },
+                motor_failure: { name: 'Motor Failure', desc: 'Electric motor system fault', dtcs: ['P0A00', 'P0A0F'] },
+                full_emergency: { name: 'Full Emergency', desc: 'Complete vehicle emergency', dtcs: ['P0217', 'B0001', 'P1A00'] },
+            };
 
-        const scenarioGrid = document.getElementById('scenarioGrid');
-        Object.entries(SCENARIOS_LOCAL).forEach(([key, sc]) => {
-            const card = document.createElement('div');
-            card.className = 'scenario-card'; card.id = 'sc_' + key;
-            const dtcHtml = sc.dtcs.map(d => `<span class="sc-dtc">${d}</span>`).join('');
-            card.innerHTML = `
+            const scenarioGrid = document.getElementById('scenarioGrid');
+            Object.entries(SCENARIOS_LOCAL).forEach(([key, sc]) => {
+                const card = document.createElement('div');
+                card.className = 'scenario-card'; card.id = 'sc_' + key;
+                const dtcHtml = sc.dtcs.map(d => `<span class="sc-dtc">${d}</span>`).join('');
+                card.innerHTML = `
     <div class="sc-name">${sc.name}</div>
     <div class="sc-desc">${sc.desc}</div>
     <div class="sc-dtcs">${dtcHtml}</div>`;
-            card.onclick = () => injectScenario(key);
-            scenarioGrid.appendChild(card);
-        });
-
-        // ── Fault Injection Functions ─────────────────────────────────
-        function injectManualDTC() {
-            const code = document.getElementById('dtcInputField').value.trim().toUpperCase();
-            if (!code) { return; }
-            fetch('/api/inject_fault', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code })
-            }).then(r => r.json()).then(d => {
-                document.getElementById('dtcInputField').value = '';
-                addInjLog('DTC', code, 'Manual injection: ' + code);
+                card.onclick = () => injectScenario(key);
+                scenarioGrid.appendChild(card);
             });
-        }
 
-        function injectScenario(key) {
-            document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
-            document.getElementById('sc_' + key)?.classList.add('active');
-            fetch('/api/inject_scenario', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scenario: key })
-            }).then(r => r.json()).then(d => {
-                const sc = SCENARIOS_LOCAL[key];
-                addInjLog('SCENARIO', sc.name, sc.desc);
-            });
-        }
-
-        function resetAllFaults() {
-            fetch('/api/reset_scenario', { method: 'POST' })
-                .then(r => r.json()).then(() => {
-                    document.querySelectorAll('.scenario-card')
-                        .forEach(c => c.classList.remove('active'));
-                    document.getElementById('activeScenario').textContent = 'NONE';
-                    addInjLog('RESET', 'All Faults', 'System reset complete');
+            // ── Fault Injection Functions ─────────────────────────────────
+            function injectManualDTC() {
+                const code = document.getElementById('dtcInputField').value.trim().toUpperCase();
+                if (!code) { return; }
+                fetch('/api/inject_fault', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                }).then(r => r.json()).then(d => {
+                    document.getElementById('dtcInputField').value = '';
+                    addInjLog('DTC', code, 'Manual injection: ' + code);
                 });
-        }
+            }
 
-        function addInjLog(type, name, desc) {
-            const log = document.getElementById('injLog');
-            const empty = log.querySelector('div[style]');
-            if (empty) empty.remove();
-            const item = document.createElement('div');
-            item.className = 'inj-log-item' + (type === 'SCENARIO' ? ' scenario' : '');
-            item.innerHTML = `
-    <div class="inj-log-type">${type}</div>
-    <div class="inj-log-name">${name}</div>
-    <div class="inj-log-time">${new Date().toTimeString().slice(0, 8)} — ${desc}</div>`;
-            log.insertBefore(item, log.firstChild);
-        }
-
-        // ── Report Generator ──────────────────────────────────────────
-        function generateReport() {
-            const btn = document.getElementById('reportBtn');
-            const status = document.getElementById('reportStatus');
-            btn.textContent = '⏳ Generating...';
-            btn.disabled = true;
-            status.textContent = '';
-            fetch('/api/generate_report', { method: 'POST' })
-                .then(r => r.json()).then(d => {
-                    if (d.status === 'ok') {
-                        status.innerHTML = `<span style="color:var(--blue);font-weight:700">⏳ Downloading PDF...</span>`;
-
-                        // Fetch the HTML content
-                        fetch('/api/download_report/' + d.fname)
-                            .then(res => res.text())
-                            .then(html => {
-                                const opt = {
-                                    margin: 0,
-                                    filename: d.fname.replace('.html', '.pdf'),
-                                    image: { type: 'jpeg', quality: 0.98 },
-                                    html2canvas: { scale: 2, windowWidth: 800 },
-                                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-                                    pagebreak: { mode: 'css', avoid: '.section' }
-                                };
-
-                                const iframe = document.createElement('iframe');
-                                iframe.style.position = 'fixed';
-                                iframe.style.right = '-10000px';
-                                iframe.style.width = '800px';
-                                iframe.style.height = '3000px'; // ensure enough height for render
-                                document.body.appendChild(iframe);
-
-                                iframe.contentDocument.open();
-                                iframe.contentDocument.write(html);
-                                iframe.contentDocument.close();
-
-                                setTimeout(() => {
-                                    html2pdf().set(opt).from(iframe.contentDocument.documentElement).save().then(() => {
-                                        btn.textContent = '📄 Generate AUTOSAR Report';
-                                        btn.disabled = false;
-                                        status.innerHTML = `<span style="color:var(--green);font-weight:700">✓ PDF saved directly to your local system!</span>`;
-                                        setTimeout(() => document.body.removeChild(iframe), 1000);
-                                    });
-                                }, 500);
-                            });
-                    } else {
-                        btn.textContent = '📄 Generate AUTOSAR Report';
-                        btn.disabled = false;
-                        status.innerHTML = `<span style="color:var(--red)">
-          ✗ Error: ${d.msg}</span>`;
-                    }
+            function injectScenario(key) {
+                document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+                document.getElementById('sc_' + key)?.classList.add('active');
+                fetch('/api/inject_scenario', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario: key })
+                }).then(r => r.json()).then(d => {
+                    const sc = SCENARIOS_LOCAL[key];
+                    addInjLog('SCENARIO', sc.name, sc.desc);
                 });
-        }
+            }
 
-        // ── SocketIO ──────────────────────────────────────────────────
-        const socket = io();
+            function resetAllFaults() {
+                fetch('/api/reset_scenario', { method: 'POST' })
+                    .then(r => r.json()).then(() => {
+                        document.querySelectorAll('.scenario-card')
+                            .forEach(c => c.classList.remove('active'));
+                        document.getElementById('activeScenario').textContent = 'NONE';
+                        addInjLog('RESET', 'All Faults', 'System reset complete');
+                    });
+            }
 
-        socket.on('vehicle_update', function (data) {
-            const s = data.state || {};
-            const d = data.decisions || {};
-            const dtcs = data.dtcs || [];
-            const ls = data.log_stats || {};
-            const il = data.injection_log || [];
-            const as = data.active_scenario;
+            function resetBus() {
+                fetch('/api/reset_bus', { method: 'POST' })
+                    .then(r => r.json())
+                    .then(d => {
+                        addInjLog('NETWORK', 'RESET', 'CAN Bus reset - Counters cleared');
+                    });
+            }
 
-            const speed = s.vehicle_speed || 0;
-            const rpm = s.engine_rpm || 0;
-            const soc = s.battery_soc || 75;
-            const temp = s.engine_temp || 25;
-
-            // Gauges
-            targetGauges.speed = speed;
-            targetGauges.rpm = rpm;
-            targetGauges.temp = temp;
-
-            // Charts
-            pushChart(charts.speed, speed);
-            pushChart(charts.rpm, rpm);
-            pushChart(charts.soc, soc);
-            pushChart(charts.temp, temp);
-
-            // Battery
-            document.getElementById('socVal').textContent = Math.round(soc) + '%';
-            document.getElementById('socBar').style.width = soc + '%';
-            document.getElementById('socBar').style.background =
-                soc < 20 ? '#dc2626' : soc < 40 ? '#d97706' : 'linear-gradient(90deg,#2563eb,#0891b2)';
-
-            // Hybrid
-            const hmode = s.hybrid_mode || '--';
-            const hmc = { EV: '#059669', HV: '#d97706', BOOST: '#dc2626', REGEN: '#059669', IDLE: '#94a3b8' };
-            document.getElementById('hybridMode').textContent = hmode;
-            document.getElementById('hybridMode').style.color = hmc[hmode] || '#94a3b8';
-            document.getElementById('phaseBadge').textContent = '● ' + hmode;
-            document.getElementById('gearDisp').textContent = s.current_gear || '1';
-            document.getElementById('driveModeDisp').textContent = s.drive_mode || 'D';
-
-            const setDot = (id, on) => { document.getElementById(id).className = 'h-dot' + (on ? ' on' : ''); };
-            setDot('engineDot', s.engine_active);
-            setDot('motorDot', s.motor_active);
-            setDot('regenDot', s.regen_active);
-            document.getElementById('engineVal').textContent = s.engine_active ? 'ON' : 'OFF';
-            document.getElementById('motorVal').textContent = s.motor_active ? 'ON' : 'OFF';
-            document.getElementById('regenVal').textContent = (s.regen_power || 0).toFixed(1) + 'kW';
-            document.getElementById('battVal').textContent = Math.round(soc) + '%';
-            const bd = document.getElementById('battDot');
-            bd.style.background = soc < 20 ? '#dc2626' : soc < 40 ? '#d97706' : '#059669';
-
-            // Telemetry
-            const fmt = (v, dec = 1) => typeof v === 'number' ? v.toFixed(dec) : (v || '--');
-            document.getElementById('s_torque').textContent = fmt(s.motor_torque);
-            document.getElementById('s_brake').textContent = fmt(s.brake_pressure, 0);
-            document.getElementById('s_impact').textContent = fmt(s.impact_force);
-            document.getElementById('s_voltage').textContent = fmt(s.battery_voltage, 0);
-            document.getElementById('s_mmode').textContent = s.motor_mode || '--';
-            document.getElementById('s_energy').textContent = fmt(s.energy_recovered, 0);
-
-            // Tyres
-            [['tfl', 'tflVal', s.tyre_pressure_fl],
-            ['tfr', 'tfrVal', s.tyre_pressure_fr],
-            ['trl', 'trlVal', s.tyre_pressure_rl],
-            ['trr', 'trrVal', s.tyre_pressure_rr]
-            ].forEach(([cid, vid, val]) => {
-                if (val !== undefined) {
-                    document.getElementById(vid).textContent = val.toFixed(1);
-                    document.getElementById(cid).className = 'tyre-cell' + (val < 28 ? ' warn' : '');
-                }
-            });
-
-            // Ignition + ECU boot
-            const ign = s.ignition_state || '--';
-            const ignEl = document.getElementById('ignBadge');
-            ignEl.textContent = '● ' + ign;
-            ignEl.className = 'ign-badge' + (ign === 'RUNNING' ? ' running' : '');
-            const ecuStatus = s.ecu_status || {};
-            ECU_LIST.forEach(ecu => {
-                const dot = document.getElementById('ecu_' + ecu);
-                if (dot) dot.className = 'ecu-dot' + (ecuStatus[ecu] ? ' online' : '');
-            });
-
-            // Fault counters
-            document.getElementById('critCount').textContent = `⬤ ${data.critical || 0} CRITICAL`;
-            document.getElementById('warnCount').textContent = `⬤ ${data.warnings || 0} WARNINGS`;
-
-            // DTC Panel
-            const panel = document.getElementById('dtcPanel');
-            const empty = document.getElementById('dtcEmpty');
-            if (dtcs.length === 0) {
-                empty.style.display = 'block';
-                panel.querySelectorAll('.dtc-item').forEach(el => el.remove());
-            } else {
-                empty.style.display = 'none';
-                const existing = new Set([...panel.querySelectorAll('.dtc-item')].map(el => el.dataset.code));
-                dtcs.forEach(dtc => {
-                    if (!existing.has(dtc.code)) {
-                        const el = document.createElement('div');
-                        el.className = `dtc-item ${dtc.severity}`;
-                        el.dataset.code = dtc.code;
-                        el.innerHTML = `<div class="dtc-code">${dtc.code} — ${dtc.system}</div>
-          <div class="dtc-desc">${dtc.desc}</div>
-          <div class="dtc-time">⏱ ${dtc.timestamp} · #${dtc.count}</div>`;
-                        panel.appendChild(el);
+            function runAttack(cmd) {
+                fetch('/api/attack', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                }).then(r => r.json()).then(d => {
+                    if (cmd === 'STOP_ALL') {
+                        addInjLog('CYBER', 'HALT', 'All attacks stopped');
                     } else {
-                        const el = panel.querySelector(`[data-code="${dtc.code}"]`);
-                        if (el) el.querySelector('.dtc-time').textContent = `⏱ ${dtc.timestamp} · #${dtc.count}`;
+                        addInjLog('CYBER', cmd, 'Executing attack: ' + cmd);
                     }
                 });
             }
 
-            // ADAS pills
-            [['a_collision', d.collision_warning, false],
-            ['a_brake', d.emergency_brake, false],
-            ['a_overspeed', d.overspeed_warning, false],
-            ['a_overheat', d.engine_overheat, false],
-            ['a_battery', d.battery_critical, false],
-            ['a_tyre', d.tyre_warning, false],
-            ['a_airbag', d.airbag_alert, false],
-            ['a_regen', d.regen_suggestion, true],
-            ].forEach(([id, active, green]) => {
-                document.getElementById(id).className =
-                    'adas-pill' + (active ? (green ? ' active-green' : ' active') : '');
+            function addInjLog(type, name, desc) {
+                const log = document.getElementById('injLog');
+                const empty = log.querySelector('div[style]');
+                if (empty) empty.remove();
+                const item = document.createElement('div');
+                item.className = 'inj-log-item' + (type === 'SCENARIO' ? ' scenario' : '');
+                item.innerHTML = `
+    <div class="inj-log-type">${type}</div>
+    <div class="inj-log-name">${name}</div>
+    <div class="inj-log-time">${new Date().toTimeString().slice(0, 8)} — ${desc}</div>`;
+                log.insertBefore(item, log.firstChild);
+            }
+
+            // ── Report Generator ──────────────────────────────────────────
+            function generateReport() {
+                const btn = document.getElementById('reportBtn');
+                const status = document.getElementById('reportStatus');
+                btn.textContent = '⏳ Generating...';
+                btn.disabled = true;
+                status.textContent = '';
+                fetch('/api/generate_report', { method: 'POST' })
+                    .then(r => r.json()).then(d => {
+                        if (d.status === 'ok') {
+                            status.innerHTML = `<span style="color:var(--blue);font-weight:700">⏳ Downloading PDF...</span>`;
+
+                            // Fetch the HTML content
+                            fetch('/api/download_report/' + d.fname)
+                                .then(res => res.text())
+                                .then(html => {
+                                    const opt = {
+                                        margin: 0,
+                                        filename: d.fname.replace('.html', '.pdf'),
+                                        image: { type: 'jpeg', quality: 0.98 },
+                                        html2canvas: { scale: 2, windowWidth: 800 },
+                                        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+                                        pagebreak: { mode: 'css', avoid: '.section' }
+                                    };
+
+                                    const iframe = document.createElement('iframe');
+                                    iframe.style.position = 'fixed';
+                                    iframe.style.right = '-10000px';
+                                    iframe.style.width = '800px';
+                                    iframe.style.height = '3000px'; // ensure enough height for render
+                                    document.body.appendChild(iframe);
+
+                                    iframe.contentDocument.open();
+                                    iframe.contentDocument.write(html);
+                                    iframe.contentDocument.close();
+
+                                    setTimeout(() => {
+                                        html2pdf().set(opt).from(iframe.contentDocument.documentElement).save().then(() => {
+                                            btn.textContent = '📄 Generate AUTOSAR Report';
+                                            btn.disabled = false;
+                                            status.innerHTML = `<span style="color:var(--green);font-weight:700">✓ PDF saved directly to your local system!</span>`;
+                                            setTimeout(() => document.body.removeChild(iframe), 1000);
+                                        });
+                                    }, 500);
+                                });
+                        } else {
+                            btn.textContent = '📄 Generate AUTOSAR Report';
+                            btn.disabled = false;
+                            status.innerHTML = `<span style="color:var(--red)">
+          ✗ Error: ${d.msg}</span>`;
+                        }
+                    });
+            }
+
+            // ── SocketIO ──────────────────────────────────────────────────
+            const socket = io();
+
+            socket.on('ids_alert', function (al) {
+                appendSecurityAlert(al);
             });
 
-            // ── CAN Logger updates ─────────────────────────────────────
-            if (ls.total_msgs !== undefined) {
-                document.getElementById('lg_total').textContent =
-                    ls.total_msgs.toLocaleString();
-                document.getElementById('lg_rate').textContent =
-                    ls.msgs_per_sec || 0;
-                document.getElementById('lg_errors').textContent =
-                    ls.total_errors || 0;
-                document.getElementById('lg_file').textContent =
-                    ls.log_file ? ls.log_file.split('\\').pop().split('/').pop() : '--';
+            function appendSecurityAlert(al) {
+                const idsList = document.getElementById('idsAlertList');
+                if (!idsList) return;
 
-                drawBusLoadRing(ls.bus_load_pct || 0);
+                const empty = idsList.querySelector('.dtc-empty');
+                if (empty) empty.remove();
 
-                // Bus load history chart
-                if (ls.bus_load_history && ls.bus_load_history.length) {
-                    const hist = ls.bus_load_history;
-                    busLoadChart.data.datasets[0].data = hist;
-                    busLoadChart.data.labels = Array(hist.length).fill('');
-                    busLoadChart.update('none');
+                const el = document.createElement('div');
+                el.className = `alert-item ${al.severity.toLowerCase()}`;
+                el.dataset.id = al.alert_id;
+                el.innerHTML = `
+                <div class="alert-meta">
+                    <span class="alert-type">${al.type}</span>
+                    <span class="alert-time">${al.timestamp}</span>
+                </div>
+                <div class="alert-msg"><strong>${al.msg}</strong></div>
+                <div style="font-size:9px;color:var(--tdim);margin-top:4px">Target ID: <strong>${al.target_id}</strong></div>
+            `;
+                idsList.insertBefore(el, idsList.firstChild);
+                if (idsList.children.length > 20) idsList.lastChild.remove();
+
+                const detailedLog = document.getElementById('detailedSecLog');
+                if (detailedLog) {
+                    const dEmpty = detailedLog.querySelector('.dtc-empty');
+                    if (dEmpty) dEmpty.remove();
+                    const detailItem = el.cloneNode(true);
+                    detailedLog.insertBefore(detailItem, detailedLog.firstChild);
+                    if (detailedLog.children.length > 50) detailedLog.lastChild.remove();
                 }
 
-                // ECU bar list
-                const ecuBars = document.getElementById('ecuBarList');
-                ecuBars.innerHTML = '';
-                const counts = ls.ecu_counts || {};
-                const total = Math.max(1, ls.total_msgs || 1);
-                Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([ecu, cnt]) => {
-                    const pct = Math.min(100, (cnt / total) * 200);
-                    ecuBars.innerHTML += `
+                if (al.severity === 'CRITICAL') {
+                    showToast('SECURITY ALERT', `${al.type}: ${al.msg}`, 'CRITICAL');
+                }
+            }
+
+            socket.on('vehicle_update', function (data) {
+                const s = data.state || {};
+                const d = data.decisions || {};
+                const dtcs = data.dtcs || [];
+                const ls = data.log_stats || {};
+                const il = data.injection_log || [];
+                const as = data.active_scenario;
+
+                const speed = s.vehicle_speed || 0;
+                const rpm = s.engine_rpm || 0;
+                const soc = s.battery_soc || 75;
+                const temp = s.engine_temp || 25;
+
+                // Gauges
+                targetGauges.speed = speed;
+                targetGauges.rpm = rpm;
+                targetGauges.temp = temp;
+
+                // Charts
+                pushChart(charts.speed, speed);
+                pushChart(charts.rpm, rpm);
+                pushChart(charts.soc, soc);
+                pushChart(charts.temp, temp);
+
+                // Battery
+                document.getElementById('socVal').textContent = Math.round(soc) + '%';
+                document.getElementById('socBar').style.width = soc + '%';
+                document.getElementById('socBar').style.background =
+                    soc < 20 ? '#dc2626' : soc < 40 ? '#d97706' : 'linear-gradient(90deg,#2563eb,#0891b2)';
+
+                // Hybrid
+                const hmode = s.hybrid_mode || '--';
+                const hmc = { EV: '#059669', HV: '#d97706', BOOST: '#dc2626', REGEN: '#059669', IDLE: '#94a3b8' };
+                document.getElementById('hybridMode').textContent = hmode;
+                document.getElementById('hybridMode').style.color = hmc[hmode] || '#94a3b8';
+                const phase = s.drive_phase || 'IDLE';
+                document.getElementById('phaseVal').textContent = phase;
+                const pDot = document.getElementById('phaseDot');
+                pDot.className = 'h-dot' + (phase !== 'IDLE' ? ' on' : '');
+                if (phase.includes('ACCEL')) pDot.style.background = 'var(--blue)';
+                else if (phase.includes('DECEL')) pDot.style.background = 'var(--yellow)';
+                else if (phase.includes('CRUIS')) pDot.style.background = 'var(--green)';
+                else pDot.style.background = 'var(--border)';
+
+                document.getElementById('gearDisp').textContent = s.current_gear || '1';
+                document.getElementById('driveModeDisp').textContent = s.drive_mode || 'D';
+
+                const setDot = (id, on) => { document.getElementById(id).className = 'h-dot' + (on ? ' on' : ''); };
+                setDot('engineDot', s.engine_active);
+                setDot('motorDot', s.motor_active);
+                setDot('regenDot', s.regen_active);
+                document.getElementById('engineVal').textContent = s.engine_active ? 'ON' : 'OFF';
+                document.getElementById('motorVal').textContent = s.motor_active ? 'ON' : 'OFF';
+                document.getElementById('regenVal').textContent = (s.regen_power || 0).toFixed(1) + 'kW';
+                document.getElementById('battVal').textContent = Math.round(soc) + '%';
+                const bd = document.getElementById('battDot');
+                bd.style.background = soc < 20 ? '#dc2626' : soc < 40 ? '#d97706' : '#059669';
+
+                // Telemetry
+                const fmt = (v, dec = 1) => typeof v === 'number' ? v.toFixed(dec) : (v || '--');
+                document.getElementById('s_torque').textContent = fmt(s.motor_torque);
+                document.getElementById('s_brake').textContent = fmt(s.brake_pressure, 0);
+                document.getElementById('s_impact').textContent = fmt(s.impact_force);
+                document.getElementById('s_voltage').textContent = fmt(s.battery_voltage, 0);
+                document.getElementById('s_mmode').textContent = s.motor_mode || '--';
+                document.getElementById('s_energy').textContent = fmt(s.energy_recovered, 0);
+
+                // Tyres
+                [['tfl', 'tflVal', s.tyre_pressure_fl],
+                ['tfr', 'tfrVal', s.tyre_pressure_fr],
+                ['trl', 'trlVal', s.tyre_pressure_rl],
+                ['trr', 'trrVal', s.tyre_pressure_rr]
+                ].forEach(([cid, vid, val]) => {
+                    if (val !== undefined) {
+                        const pressure = Math.max(0, val);
+                        const isAbnormal = pressure < 28 || pressure > 38;
+                        const valEl = document.getElementById(vid);
+                        valEl.textContent = pressure.toFixed(1);
+                        valEl.classList.toggle('abnormal-val', isAbnormal);
+                        document.getElementById(cid).className = 'tyre-cell' + (isAbnormal ? ' warn' : '');
+                    }
+                });
+
+                // Ignition + ECU boot
+                const ign = s.ignition_state || '--';
+                const ignEl = document.getElementById('ignBadge');
+                ignEl.textContent = '● ' + ign;
+                ignEl.className = 'ign-badge' + (ign === 'RUNNING' ? ' running' : '');
+                const ecuStatus = s.ecu_status || {};
+                ECU_LIST.forEach(ecu => {
+                    const dot = document.getElementById('ecu_' + ecu);
+                    if (dot) dot.className = 'ecu-dot' + (ecuStatus[ecu] ? ' online' : '');
+                });
+
+                // Fault counters
+                document.getElementById('critCount').textContent = `⬤ ${data.critical || 0} CRITICAL ALERTS`;
+                document.getElementById('warnCount').textContent = `⬤ ${data.warnings || 0} ACTIVE WARNINGS`;
+
+                // DTC Panel
+                const panel = document.getElementById('dtcPanel');
+                const empty = document.getElementById('dtcEmpty');
+                if (dtcs.length === 0) {
+                    empty.style.display = 'block';
+                    panel.querySelectorAll('.dtc-item').forEach(el => el.remove());
+                } else {
+                    empty.style.display = 'none';
+                    const existing = new Set([...panel.querySelectorAll('.dtc-item')].map(el => el.dataset.code));
+                    dtcs.forEach(dtc => {
+                        if (!existing.has(dtc.code)) {
+                            const el = document.createElement('div');
+                            el.className = `dtc-item ${dtc.severity.toLowerCase()} alert-item ${dtc.severity}`;
+                            el.dataset.code = dtc.code;
+                            el.innerHTML = `<div class="dtc-code"><strong>${dtc.code}</strong> — ${dtc.system}</div>
+          <div class="dtc-desc">${dtc.desc}</div>
+          <div class="dtc-time">⏱ ${dtc.timestamp} · #${dtc.count}</div>`;
+                            panel.appendChild(el);
+                        } else {
+                            const el = panel.querySelector(`[data-code="${dtc.code}"]`);
+                            if (el) el.querySelector('.dtc-time').textContent = `⏱ ${dtc.timestamp} · #${dtc.count}`;
+                        }
+                    });
+                }
+
+                // ADAS pills
+                [['a_collision', d.collision_warning, false],
+                ['a_brake', d.emergency_brake, false],
+                ['a_overspeed', d.overspeed_warning, false],
+                ['a_overheat', d.engine_overheat, false],
+                ['a_battery', d.battery_critical, false],
+                ['a_tyre', d.tyre_warning, false],
+                ['a_airbag', d.airbag_alert, false],
+                ['a_regen', d.regen_suggestion, true],
+                ].forEach(([id, active, green]) => {
+                    document.getElementById(id).className =
+                        'adas-pill' + (active ? (green ? ' active-green' : ' active') : '');
+                });
+
+                // Cybersecurity metrics
+                const arb = data.arb_stats || {};
+                const secRecEl = document.getElementById('secRec');
+                if (secRecEl) secRecEl.textContent = arb.rec || 0;
+
+                const secTecEl = document.getElementById('secTec');
+                if (secTecEl) secTecEl.textContent = arb.tec || 0;
+
+                const secBusStateEl = document.getElementById('secBusState');
+                if (secBusStateEl) {
+                    secBusStateEl.textContent = arb.bus_state || 'UNKNOWN';
+                    secBusStateEl.style.color = arb.bus_state === 'BUS_OFF' ? 'var(--red)' :
+                        arb.bus_state === 'ERROR_PASSIVE' ? 'var(--gold)' : 'var(--green)';
+                }
+
+                const secCollisionsEl = document.getElementById('secCollisions');
+                if (secCollisionsEl) secCollisionsEl.textContent = arb.collisions || 0;
+
+                const secBusLoadEl = document.getElementById('secBusLoad');
+                if (secBusLoadEl) secBusLoadEl.textContent = (arb.load_percent || 0).toFixed(1) + '%';
+
+                const idsStatus = document.getElementById('idsStatus');
+                if (idsStatus) {
+                    if (arb.bus_state === 'BUS_OFF') {
+                        idsStatus.textContent = 'BUS_OFF';
+                        idsStatus.style.color = 'var(--red)';
+                    } else {
+                        idsStatus.textContent = 'ACTIVE';
+                        idsStatus.style.color = 'var(--green)';
+                    }
+                }
+
+                // Security Alerts Sync
+                const alerts = data.sec_alerts || [];
+                const idsList = document.getElementById('idsAlertList');
+                if (idsList) {
+                    const existing = new Set([...idsList.querySelectorAll('[data-id]')].map(el => el.dataset.id));
+                    alerts.forEach(al => {
+                        if (!existing.has(al.alert_id)) {
+                            appendSecurityAlert(al);
+                        }
+                    });
+                }
+
+                // Jitter and Freeze Stats
+                const jit = data.jitter || { avg: 0, max: 0 };
+                const jitAvgEl = document.getElementById('jitterAvg');
+                if (jitAvgEl) jitAvgEl.textContent = jit.avg.toFixed(2) + ' ms';
+                const jitMaxEl = document.getElementById('jitterMax');
+                if (jitMaxEl) jitMaxEl.textContent = jit.max.toFixed(2) + ' ms';
+
+                const freezeBtn = document.getElementById('freezeBtn');
+                if (freezeBtn) {
+                    const frozen = data.sim_frozen;
+                    freezeBtn.textContent = frozen ? '▶ RESUME SIM' : '⏸ FREEZE SIM';
+                    freezeBtn.style.background = frozen ? 'var(--gold)' : '#6366f1';
+                }
+
+                // Attack Indicators
+                const atkCmd = data.active_attack || 'STOP_ALL';
+                document.getElementById('atk_speed').classList.toggle('active-atk', atkCmd === 'SPOOF_SPEED');
+                document.getElementById('atk_brake').classList.toggle('active-atk', atkCmd === 'SPOOF_BRAKE');
+                document.getElementById('atk_dos').classList.toggle('active-atk', atkCmd === 'DOS_FLOOD');
+
+                const btnSpeed = document.getElementById('atk_speed');
+                btnSpeed.innerHTML = atkCmd === 'SPOOF_SPEED' ? '⚡ SPEED SPOOF ACTIVE' : '⚡ SPOOF SPEED (255km/h)';
+
+                const btnBrake = document.getElementById('atk_brake');
+                btnBrake.innerHTML = atkCmd === 'SPOOF_BRAKE' ? '⚡ BRAKE SPOOF ACTIVE' : '⚡ SPOOF BRAKE (100bar)';
+
+                const btnDos = document.getElementById('atk_dos');
+                btnDos.innerHTML = atkCmd === 'DOS_FLOOD' ? '🔥 DoS FLOOD ACTIVE' : '🔥 DoS FLOOD (0x000)';
+
+                // Active scenario
+                const actScEl = document.getElementById('activeScenario');
+                if (actScEl) {
+                    if (as) {
+                        actScEl.textContent = as.toUpperCase();
+                        document.querySelectorAll('.scenario-card').forEach(c => {
+                            c.classList.toggle('active', c.id === 'sc_' + as);
+                        });
+                    } else {
+                        actScEl.textContent = 'NONE';
+                        document.querySelectorAll('.scenario-card').forEach(c => {
+                            c.classList.remove('active');
+                        });
+                    }
+                }
+
+                // ── CAN Logger updates ─────────────────────────────────────
+                if (ls && ls.total_msgs !== undefined) {
+                    const lgTotal = document.getElementById('lg_total');
+                    if (lgTotal) lgTotal.textContent = ls.total_msgs.toLocaleString();
+
+                    const lgRate = document.getElementById('lg_rate');
+                    if (lgRate) lgRate.textContent = ls.msgs_per_sec || 0;
+
+                    const lgErrors = document.getElementById('lg_errors');
+                    if (lgErrors) lgErrors.textContent = ls.total_errors || 0;
+
+                    const lgFile = document.getElementById('lg_file');
+                    if (lgFile) lgFile.textContent = ls.log_file ? ls.log_file.split('\\').pop().split('/').pop() : '--';
+
+                    drawBusLoadRing(ls.bus_load_pct || 0);
+
+                    // Bus load history chart
+                    if (ls.bus_load_history && ls.bus_load_history.length) {
+                        const hist = ls.bus_load_history;
+                        busLoadChart.data.datasets[0].data = hist;
+                        busLoadChart.data.labels = Array(hist.length).fill('');
+                        busLoadChart.update('none');
+                    }
+
+                    // ECU bar list
+                    const ecuBars = document.getElementById('ecuBarList');
+                    ecuBars.innerHTML = '';
+                    const counts = ls.ecu_counts || {};
+                    const total = Math.max(1, ls.total_msgs || 1);
+                    Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([ecu, cnt]) => {
+                        const pct = Math.min(100, (cnt / total) * 200);
+                        ecuBars.innerHTML += `
         <div class="ecu-bar-row">
           <div class="ecu-bar-name">${ecu}</div>
           <div class="ecu-bar-bg"><div class="ecu-bar-fill" style="width:${pct}%"></div></div>
           <div class="ecu-bar-count">${cnt.toLocaleString()}</div>
         </div>`;
-                });
+                    });
 
-                // Top IDs
-                const topIds = document.getElementById('topIdList');
-                topIds.innerHTML = '';
-                (ls.top_ids || []).forEach(item => {
-                    topIds.innerHTML += `
-        <div class="top-id-row">
-          <span class="top-id-hex">${item.id}</span>
-          <span class="top-id-ecu">${item.ecu}</span>
-          <span class="top-id-cnt">${item.count.toLocaleString()}</span>
-        </div>`;
-                });
-            }
+                    // Update Report Page Live Stats
+                    const rptTotal = document.getElementById('rpt_total');
+                    if (rptTotal) rptTotal.textContent = ls.total_msgs.toLocaleString();
+                    const rptLoad = document.getElementById('rpt_load');
+                    if (rptLoad) rptLoad.textContent = (ls.bus_load_pct || 0).toFixed(1) + '%';
+                    const rptErrors = document.getElementById('rpt_errors');
+                    if (rptErrors) rptErrors.textContent = ls.total_errors || 0;
 
-            // Active scenario
-            if (as) {
-                document.getElementById('activeScenario').textContent = as.toUpperCase();
-                document.querySelectorAll('.scenario-card').forEach(c => {
-                    c.classList.toggle('active', c.id === 'sc_' + as);
-                });
-            } else {
-                document.getElementById('activeScenario').textContent = 'NONE';
-            }
-        });
-    </script>
+                    // Sync DTCs to Report Page
+                    const rptDtcList = document.getElementById('reportDtcList');
+                    if (rptDtcList) {
+                        if (dtcs.length === 0) {
+                            rptDtcList.innerHTML = '<div class="dtc-empty">No active faults detected</div>';
+                        } else {
+                            rptDtcList.innerHTML = dtcs.map(d => `
+                            <div class="dtc-item ${d.severity}">
+                                <div class="dtc-code">${d.code} — ${d.system}</div>
+                                <div class="dtc-desc" style="font-size:9px">${d.desc}</div>
+                            </div>
+                        `).join('');
+                        }
+                    }
+                }
+
+            });
+        </script>
 </body>
 
 </html>

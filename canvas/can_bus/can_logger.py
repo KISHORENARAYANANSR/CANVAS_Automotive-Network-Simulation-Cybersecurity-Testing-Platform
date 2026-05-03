@@ -11,7 +11,7 @@ import os
 from collections import defaultdict, deque
 from vehicle.dtc_manager import dtc_manager
 
-# ── CAN ID to ECU mapping ─────────────────────────────────────
+# -- CAN ID to ECU mapping -------------------------------------
 CAN_ID_MAP = {
     0x100 : 'ENGINE',
     0x101 : 'ENGINE',
@@ -22,10 +22,9 @@ CAN_ID_MAP = {
     0x500 : 'BMS',
     0x501 : 'BMS',
     0x600 : 'MOTOR',
-    0x700 : 'TPMS',
-    0x800 : 'HYBRID_CTRL',
-    0x900 : 'REGEN_BRAKE',
-    0xA00 : 'ADAS',
+    0x700 : 'HYBRID_CTRL',
+    0x710 : 'REGEN_BRAKE',
+    0x720 : 'ADAS',
 }
 
 class CANLogger:
@@ -34,7 +33,7 @@ class CANLogger:
         self.log_dir     = log_dir
         self.running     = True
 
-        # ── Statistics ────────────────────────────────────────
+        # -- Statistics ----------------------------------------
         self.total_msgs       = 0
         self.total_errors     = 0
         self.msg_counts       = defaultdict(int)
@@ -48,7 +47,7 @@ class CANLogger:
         self._second_bytes    = 0
         self._last_second     = time.time()
 
-        # ── Log file setup ────────────────────────────────────
+        # -- Log file setup ------------------------------------
         os.makedirs(log_dir, exist_ok=True)
         self.log_file = os.path.join(
             log_dir,
@@ -66,7 +65,7 @@ class CANLogger:
 
         print(f"[CAN LOGGER] Log file: {self.log_file}")
 
-        # ── Shared stats for dashboard ─────────────────────────
+        # -- Shared stats for dashboard -------------------------
         self.stats = {
             'total_msgs'      : 0,
             'total_errors'    : 0,
@@ -209,7 +208,7 @@ class CANLogger:
         ]
         for t in threads:
             t.start()
-        print(f"[CAN LOGGER] ✅ Logging to {self.log_file}")
+        print(f"[CAN LOGGER] [OK] Logging to {self.log_file}")
 
     def stop(self):
         self.running = False
@@ -217,7 +216,7 @@ class CANLogger:
               f"Total messages logged: {self.total_msgs}")
 
 
-# ── Global logger instance ────────────────────────────────────
+# -- Global logger instance ------------------------------------
 _can_logger = None
 
 def init_logger(bus):

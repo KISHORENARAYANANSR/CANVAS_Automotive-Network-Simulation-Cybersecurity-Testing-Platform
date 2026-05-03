@@ -47,6 +47,17 @@ def broadcast_loop():
             state['ecu_status']     = _ethernet_bus.get(
                 'ecu_status', {})
 
+            from can_bus.can_arbitration import get_arbitration
+            arb = get_arbitration()
+            arb_stats = {
+                'tec': arb.tec, 'rec': arb.rec,
+                'bus_state': arb.bus_state, 'load_percent': arb.bus_load_percent,
+                'collisions': arb.total_collisions
+            } if arb else {}
+
+            from core.scheduler import scheduler
+            jitter = scheduler.get_jitter_stats()
+
             if state:
                 with app.app_context():
                     socketio.emit('vehicle_update', {
@@ -60,6 +71,12 @@ def broadcast_loop():
                             'injection_log', []),
                         'active_scenario': _ethernet_bus.get(
                             'active_scenario', None),
+                        'arb_stats'      : arb_stats,
+                        'sec_alerts'     : _ethernet_bus.get('security_alerts', []),
+                        'ids_active'     : _ethernet_bus.get('ids_active', True),
+                        'active_attack'  : _ethernet_bus.get('active_attack', None),
+                        'jitter'         : jitter,
+                        'sim_frozen'     : scheduler.frozen
                     })
         except Exception as e:
             print(f"[SERVER] Broadcast error: {e}")
@@ -117,6 +134,121 @@ def reset_scenario():
     except Exception as e:
         return jsonify({'status': 'error', 'msg': str(e)})
 
+@app.route('/api/attack', methods=['POST'])
+def run_attack():
+    try:
+        data = request.get_json()
+        cmd = data.get('command', '')
+        _ethernet_bus['attack_command'] = cmd
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/reset_bus', methods=['POST'])
+def reset_bus():
+    try:
+        from can_bus.can_arbitration import get_arbitration
+        arb = get_arbitration()
+        if arb:
+            arb.reset()
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/freeze', methods=['POST'])
+def toggle_freeze():
+    try:
+        from core.scheduler import scheduler
+        frozen = scheduler.toggle_freeze()
+        return jsonify({'status': 'ok', 'frozen': frozen})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+# --- Real-Time Testing & Injection API ---
+
+@app.route('/api/inject_speed', methods=['POST'])
+def inject_speed():
+    try:
+        val = float(request.get_json().get('value', 0))
+        _ethernet_bus.setdefault('overrides', {})['manual_speed'] = val
+        return jsonify({'status': 'ok', 'value': val})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/inject_rpm', methods=['POST'])
+def inject_rpm():
+    try:
+        val = float(request.get_json().get('value', 0))
+        _ethernet_bus.setdefault('overrides', {})['manual_rpm'] = val
+        return jsonify({'status': 'ok', 'value': val})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/inject_brake', methods=['POST'])
+def inject_brake():
+    try:
+        val = float(request.get_json().get('value', 0))
+        _ethernet_bus.setdefault('overrides', {})['manual_brake'] = val
+        return jsonify({'status': 'ok', 'value': val})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/attack/speed_spoof', methods=['POST'])
+def attack_speed_spoof():
+    try:
+        active = bool(request.get_json().get('active', False))
+        _ethernet_bus['attack_command'] = 'SPOOF_SPEED' if active else 'STOP_ALL'
+        return jsonify({'status': 'ok', 'active': active})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/attack/brake_spoof', methods=['POST'])
+def attack_brake_spoof():
+    try:
+        active = bool(request.get_json().get('active', False))
+        _ethernet_bus['attack_command'] = 'SPOOF_BRAKE' if active else 'STOP_ALL'
+        return jsonify({'status': 'ok', 'active': active})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/attack/dos', methods=['POST'])
+def attack_dos():
+    try:
+        active = bool(request.get_json().get('active', False))
+        _ethernet_bus['attack_command'] = 'DOS_FLOOD' if active else 'STOP_ALL'
+        return jsonify({'status': 'ok', 'active': active})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/fault/engine_overheat', methods=['POST'])
+def fault_overheat():
+    try:
+        from vehicle.fault_injector import get_injector
+        inj = get_injector()
+        if inj: inj.inject_scenario('engine_overheat')
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/fault/battery_low', methods=['POST'])
+def fault_battery_low():
+    try:
+        from vehicle.fault_injector import get_injector
+        inj = get_injector()
+        if inj: inj.inject_scenario('battery_failure')
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/ids/toggle', methods=['POST'])
+def ids_toggle():
+    try:
+        active = bool(request.get_json().get('active', True))
+        _ethernet_bus['ids_active'] = active
+        return jsonify({'status': 'ok', 'active': active})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
 @app.route('/api/generate_report', methods=['POST'])
 def generate_report():
     try:
@@ -168,7 +300,7 @@ def view_report():
             padding:10px 20px;border-radius:8px;font-size:14px;
             font-weight:700;cursor:pointer;
             box-shadow:0 4px 12px rgba(37,99,235,0.4)">
-            🖨️ Save as PDF
+               Save as PDF
           </button>
           <style>
             @media print {
@@ -191,10 +323,15 @@ def start_server(bus, network=None):
         target=broadcast_loop, daemon=True)
     t.start()
     print("[SERVER] Flask server starting...")
-    socketio.run(
-        app,
-        host='0.0.0.0',
-        port=5000,
-        allow_unsafe_werkzeug=True
-    )
+    try:
+        socketio.run(
+            app,
+            host='0.0.0.0',
+            port=5000,
+            allow_unsafe_werkzeug=True
+        )
+    except Exception as e:
+        import traceback
+        print(f"[SERVER] [CRITICAL] Flask server crashed: {e}")
+        traceback.print_exc()
 

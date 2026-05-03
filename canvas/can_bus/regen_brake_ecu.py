@@ -1,13 +1,13 @@
 # CANVAS Project
 # Module: CAN Bus
 # File: regen_brake_ecu.py
-# Simulates Regenerative Brake ECU — energy recovery tracking
+# Simulates Regenerative Brake ECU   energy recovery tracking
 
 import can
-import time
-import threading
+import can
+from utils.can_codec import codec
 
-class RegenBrakeECU:
+class RegenBrakeECU(can.Listener):
     def __init__(self, bus):
         self.bus = bus
         self.running = True
@@ -26,28 +26,26 @@ class RegenBrakeECU:
         self.MAX_REGEN_KW       = 27.0    # Max regen power (kW)
         self.REGEN_EFFICIENCY   = 0.85    # 85% conversion efficiency
 
-    def listen_abs_ecu(self):
-        """Listen for brake pressure (ID: 0x201)"""
-        while self.running:
-            msg = self.bus.recv(timeout=1.0)
-            if msg and msg.arbitration_id == 0x201:
-                self.brake_pressure = msg.data[0]
-
-    def listen_engine_ecu(self):
-        """Listen for vehicle speed (ID: 0x100)"""
-        while self.running:
-            msg = self.bus.recv(timeout=1.0)
-            if msg and msg.arbitration_id == 0x100:
-                self.vehicle_speed = msg.data[2]
-
-    def listen_motor_ecu(self):
-        """Listen for motor regen status (ID: 0x600)"""
-        while self.running:
-            msg = self.bus.recv(timeout=1.0)
-            if msg and msg.arbitration_id == 0x600:
+    def on_message_received(self, msg):
+        if not self.running: return
+        
+        if msg.arbitration_id == 0x201:
+            decoded = codec.decode(0x201, msg.data)
+            if decoded:
+                self.brake_pressure = decoded.get('Brake_Pressure', 0)
+                
+        elif msg.arbitration_id == 0x100:
+            decoded = codec.decode(0x100, msg.data)
+            if decoded:
+                self.vehicle_speed = decoded.get('Vehicle_Speed', 0)
+                
+        elif msg.arbitration_id == 0x600:
+            decoded = codec.decode(0x600, msg.data)
+            if decoded:
+                motor_mode = decoded.get('Motor_Mode', 0x00)
                 mode_map        = {0x00: 'IDLE', 0x01: 'DRIVE',
                                   0x02: 'REGEN', 0x03: 'BOOST'}
-                self.motor_mode = mode_map.get(msg.data[4], 'IDLE')
+                self.motor_mode = mode_map.get(motor_mode, 'IDLE')
                 self.regen_active = (self.motor_mode == 'REGEN')
 
                 # Extract regen power from motor data
@@ -66,60 +64,49 @@ class RegenBrakeECU:
                 else:
                     self.regen_power_kw = 0.0
 
-    def calculate_energy_recovery(self):
-        """Calculate cumulative energy recovered"""
-        while self.running:
-            if self.regen_active and self.regen_power_kw > 0:
-                # Energy (Wh) = Power (kW) * time (seconds) / 3600 * efficiency
-                energy_this_cycle   = (self.regen_power_kw * 0.5 /
-                                      3600.0 * 1000.0 * self.REGEN_EFFICIENCY)
-                self.energy_recovered += energy_this_cycle
-                self.session_savings  += energy_this_cycle
-                self.regen_efficiency = self.REGEN_EFFICIENCY * 100.0
+    def calculate_energy_recovery_step(self):
+        """Calculate cumulative energy recovered step"""
+        if not self.running: return
+        if self.regen_active and self.regen_power_kw > 0:
+            # Energy (Wh) = Power (kW) * time (seconds) / 3600 * efficiency
+            energy_this_cycle   = (self.regen_power_kw * 0.5 /
+                                  3600.0 * 1000.0 * self.REGEN_EFFICIENCY)
+            self.energy_recovered += energy_this_cycle
+            self.session_savings  += energy_this_cycle
+            self.regen_efficiency = self.REGEN_EFFICIENCY * 100.0
 
-                print(f"[REGEN BRAKE ECU] ⚡ Recovering → "
-                      f"Power:{self.regen_power_kw:.1f}kW "
-                      f"Total:{self.energy_recovered:.2f}Wh "
-                      f"Efficiency:{self.regen_efficiency:.0f}%")
-            else:
-                self.regen_efficiency = 0.0
-
-            time.sleep(0.5)
-
-    def send_regen_status(self):
-        """Send CAN frame: Regen status + energy recovered (ID: 0x900)"""
-        while self.running:
-            regen_flag      = 0x01 if self.regen_active else 0x00
-            power_byte      = min(255, int(self.regen_power_kw * 10)) & 0xFF
-            energy_high     = (int(self.energy_recovered) >> 8) & 0xFF
-            energy_low      = int(self.energy_recovered) & 0xFF
-            efficiency_byte = int(self.regen_efficiency) & 0xFF
-
-            msg = can.Message(
-                arbitration_id=0x900,
-                data=[regen_flag, power_byte, energy_high,
-                      energy_low, efficiency_byte, 0x00, 0x00, 0x00],
-                is_extended_id=False
-            )
-            self.bus.send(msg)
-            print(f"[REGEN BRAKE ECU] Sent → "
-                  f"Active:{bool(regen_flag)} "
+            print(f"[REGEN BRAKE ECU] [POW] Recovering -> "
                   f"Power:{self.regen_power_kw:.1f}kW "
-                  f"Recovered:{self.energy_recovered:.1f}Wh")
-            time.sleep(0.2)
+                  f"Total:{self.energy_recovered:.2f}Wh "
+                  f"Efficiency:{self.regen_efficiency:.0f}%")
+        else:
+            self.regen_efficiency = 0.0
+
+    def send_regen_status_step(self):
+        """Send CAN frame: Regen status + energy recovered step"""
+        if not self.running: return
+        regen_flag      = 0x01 if self.regen_active else 0x00
+
+        msg = can.Message(
+            arbitration_id=0x710,
+            data=codec.encode(0x710, {
+                'Regen_Active': regen_flag,
+                'Regen_Power': self.regen_power_kw,
+                'Energy_Recovered': self.energy_recovered
+            }),
+            is_extended_id=False
+        )
+        self.bus.send(msg)
+        print(f"[REGEN BRAKE ECU] Sent -> "
+              f"Active:{bool(regen_flag)} "
+              f"Power:{self.regen_power_kw:.1f}kW "
+              f"Recovered:{self.energy_recovered:.1f}Wh")
 
     def start(self):
         print("[REGEN BRAKE ECU] Starting...")
-        threads = [
-            threading.Thread(target=self.listen_abs_ecu),
-            threading.Thread(target=self.listen_engine_ecu),
-            threading.Thread(target=self.listen_motor_ecu),
-            threading.Thread(target=self.calculate_energy_recovery),
-            threading.Thread(target=self.send_regen_status),
-        ]
-        for t in threads:
-            t.daemon = True
-            t.start()
+        from core.scheduler import scheduler
+        scheduler.register('REGEN_CALC', 500, self.calculate_energy_recovery_step)
+        scheduler.register('REGEN_STATUS', 200, self.send_regen_status_step)
 
     def stop(self):
         self.running = False

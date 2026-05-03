@@ -8,11 +8,18 @@ import threading
 import queue
 from vehicle.dtc_manager import dtc_manager
 
-# ── CAN Message Priority Table ────────────────────────────────
+# Precise CAN Bit Calculation (Standard 11-bit ID)
+# SOF(1) + ID(11) + RTR(1) + IDE(1) + r0(1) + DLC(4) + Data(8*DLC) + CRC(15) + DEL(1) + ACK(1) + DEL(1) + EOF(7) = 44 + 8*DLC
+def calc_msg_bits(dlc):
+    base_bits = 44 + (8 * dlc)
+    stuff_bits = (34 + 8 * dlc - 1) // 4
+    return base_bits + stuff_bits
+
+# -- CAN Message Priority Table --------------------------------
 # Lower arbitration ID = Higher priority
 # This matches real CAN bus standard (ISO 11898)
 ARBITRATION_PRIORITY = {
-    0x100 : 1,    # Engine RPM/Speed     — HIGHEST
+    0x100 : 1,    # Engine RPM/Speed       HIGHEST
     0x101 : 2,    # Engine Temp/Throttle
     0x200 : 3,    # ABS Wheel Speeds
     0x201 : 4,    # ABS Brake Pressure
@@ -24,7 +31,7 @@ ARBITRATION_PRIORITY = {
     0x700 : 10,   # TPMS
     0x800 : 11,   # Hybrid Control
     0x900 : 12,   # Regen Brake
-    0xA00 : 13,   # ADAS              — LOWEST
+    0xA00 : 13,   # ADAS                LOWEST
 }
 
 class CANArbitration:
@@ -39,7 +46,7 @@ class CANArbitration:
         self.running         = True
         self.lock            = threading.Lock()
 
-        # Priority queue — lower number = processed first
+        # Priority queue   lower number = processed first
         self.msg_queue       = queue.PriorityQueue()
 
         # Stats
@@ -47,6 +54,15 @@ class CANArbitration:
         self.total_collisions = 0
         self.total_retries   = 0
         self.msg_counts      = {}
+        self.total_bits_sent = 0
+        
+        # TEC / REC Counters
+        self.tec = 0
+        self.rec = 0
+        self.bus_state = 'ERROR_ACTIVE' # ERROR_ACTIVE, ERROR_PASSIVE, BUS_OFF
+        
+        self.last_load_time  = time.perf_counter()
+        self.bus_load_percent = 0.0
 
     def submit(self, msg, ecu_name='UNKNOWN'):
         """
@@ -68,10 +84,17 @@ class CANArbitration:
 
     def _process_queue(self):
         """
-        Main arbitration loop —
+        Main arbitration loop  
         processes messages by priority
         """
         while self.running:
+            if self.bus_state == 'BUS_OFF':
+                # Clear queue, bus is halted
+                try:
+                    while True: self.msg_queue.get_nowait()
+                except queue.Empty:
+                    time.sleep(0.1)
+                    continue
             try:
                 # Get highest priority message
                 priority, ts, msg, ecu = (
@@ -83,9 +106,11 @@ class CANArbitration:
                 if wait_time > 0.050:
                     # Message waited > 50ms = collision
                     self.total_collisions += 1
+                    self.tec = min(260, self.tec + 8)
+                    self._update_bus_state()
 
                     # Retry once (real CAN behavior)
-                    if wait_time < 0.100:
+                    if wait_time < 0.100 and self.bus_state != 'BUS_OFF':
                         self.total_retries += 1
                         self.msg_queue.put((
                             priority,
@@ -95,19 +120,22 @@ class CANArbitration:
                         ))
                         continue
                     else:
-                        # Drop message — bus overload
-                        print(f"[ARBITRATION] ⚠️  "
-                              f"Message dropped — "
-                              f"Bus overload "
-                              f"[0x{msg.arbitration_id:X}]")
+                        # Drop message   bus overload
+                        print(f"[ARBITRATION] [WARN]  Message dropped   Bus overload/Bus-Off [0x{msg.arbitration_id:X}]")
                         if self.total_collisions > 100:
                             dtc_manager.set_fault('U0001')
                         continue
 
                 # Send to real CAN bus
                 try:
-                    self.real_bus.send(msg)
+                    self.real_bus._original_send(msg)
                     self.total_sent += 1
+                    self.total_bits_sent += calc_msg_bits(msg.dlc)
+                    
+                    # Successful Tx decreases TEC
+                    if self.tec > 0:
+                        self.tec -= 1
+                        self._update_bus_state()
 
                     # Track per-ID counts
                     aid = msg.arbitration_id
@@ -116,33 +144,64 @@ class CANArbitration:
 
                 except Exception as e:
                     print(f"[ARBITRATION] Send error: {e}")
+                    self.tec = min(260, self.tec + 8)
+                    self._update_bus_state()
                     dtc_manager.set_fault('U0001')
 
             except queue.Empty:
                 continue
 
+    def _update_bus_state(self):
+        """Update ERROR_ACTIVE, ERROR_PASSIVE, BUS_OFF based on TEC"""
+        if self.tec > 255:
+            if self.bus_state != 'BUS_OFF':
+                self.bus_state = 'BUS_OFF'
+                dtc_manager.set_fault('U0002') # CAN Bus Off
+                print("[ARBITRATION] [CRIT] CAN Bus-Off condition reached! TEC > 255")
+        elif self.tec > 127:
+            if self.bus_state != 'ERROR_PASSIVE':
+                self.bus_state = 'ERROR_PASSIVE'
+        else:
+            if self.bus_state != 'ERROR_ACTIVE':
+                self.bus_state = 'ERROR_ACTIVE'
+
+    def reset(self):
+        """Manual bus reset - clear error counters and return to ERROR_ACTIVE"""
+        with self.lock:
+            self.tec = 0
+            self.rec = 0
+            self.bus_state = 'ERROR_ACTIVE'
+            self.total_collisions = 0
+            dtc_manager.clear_all() # Clear U0002 etc.
+            print("[ARBITRATION] [OK] Bus Reset - Counters cleared, Bus ONLINE.")
+
     def print_stats(self):
-        """Print arbitration statistics"""
+        """Print arbitration statistics and calculate load periodically"""
         while self.running:
-            time.sleep(15)
-            print("\n[ARBITRATION] ── Bus Stats ──")
+            time.sleep(5)
+            # Calculate bus load
+            now = time.perf_counter()
+            dt = max(now - self.last_load_time, 0.001)
+            bits_per_sec = self.total_bits_sent / dt
+            # 500 kbps = 500,000 bits per second
+            self.bus_load_percent = min(100.0, (bits_per_sec / 500000.0) * 100.0)
+            
+            # Reset counters for next window
+            self.total_bits_sent = 0
+            self.last_load_time = now
+
+            print("\n[ARBITRATION] -- Bus Stats --")
             print(f"  Total Sent     : {self.total_sent}")
-            print(f"  Collisions     : "
-                  f"{self.total_collisions}")
+            print(f"  Collisions     : {self.total_collisions}")
             print(f"  Retries        : {self.total_retries}")
-            print(f"  Bus Load       : "
-                  f"{self._calc_bus_load():.1f}%")
-            print("[ARBITRATION] ─────────────────\n")
+            print(f"  TEC            : {self.tec}")
+            print(f"  State          : {self.bus_state}")
+            print(f"  Bus Load       : {self.bus_load_percent:.1f}%")
+            print("[ARBITRATION] -----------------\n")
 
     def _calc_bus_load(self):
-        """
-        Estimate CAN bus load %.
-        Real CAN bus max ~8000 msgs/sec at 500kbps
-        """
-        total = sum(self.msg_counts.values())
-        # Rough estimate over 15 second window
-        msgs_per_sec = total / max(1, 15)
-        return min(100, (msgs_per_sec / 8000) * 100)
+        """Return the calculated load"""
+        return self.bus_load_percent
 
     def start(self):
         print("[ARBITRATION] CAN Bus arbitration "
@@ -157,8 +216,8 @@ class CANArbitration:
         ]
         for t in threads:
             t.start()
-        print("[ARBITRATION] ✅ Arbitration active "
-              "— Priority based message routing")
+        print("[ARBITRATION] [OK] Arbitration active "
+              "  Priority based message routing")
 
     def stop(self):
         self.running = False
@@ -167,7 +226,7 @@ class CANArbitration:
               f"Collisions: {self.total_collisions}")
 
 
-# ── Global arbitration instance ───────────────────────────────
+# -- Global arbitration instance -------------------------------
 # All ECUs use this instead of bus.send() directly
 _arbitration = None
 
@@ -175,6 +234,12 @@ def init_arbitration(real_bus):
     """Initialize global arbitration with real bus"""
     global _arbitration
     _arbitration = CANArbitration(real_bus)
+    
+    # Monkey-patch real_bus.send to route through arbitration
+    if not hasattr(real_bus, '_original_send'):
+        real_bus._original_send = real_bus.send
+        real_bus.send = lambda msg: _arbitration.submit(msg, 'PATCHED')
+        
     _arbitration.start()
     return _arbitration
 

@@ -18,15 +18,15 @@ from can_bus.hybrid_control_ecu import HybridControlECU
 from can_bus.regen_brake_ecu    import RegenBrakeECU
 
 class CANNetwork:
-    def __init__(self):
+    def __init__(self, ethernet_bus=None):
         self.bus = can.Bus(
             interface='virtual',
             channel='CANVAS_CAN',
             receive_own_messages=True
         )
-        self.drive_cycle = DriveCycle()
+        self.drive_cycle = DriveCycle(ethernet_bus)
         print("[CAN NETWORK] Virtual CAN Bus created "
-              "→ Channel: CANVAS_CAN")
+              "-> Channel: CANVAS_CAN")
 
     def start(self):
         # Start timing monitor
@@ -65,7 +65,18 @@ class CANNetwork:
         self.hybrid_ctrl_ecu.start()
         self.regen_brake_ecu.start()
 
-        print("[CAN NETWORK] All 8 ECUs online ✅")
+        # Start Notifier for RX
+        self.notifier = can.Notifier(self.bus, [
+            self.engine_ecu, self.abs_ecu, self.airbag_ecu,
+            self.transmission_ecu, self.bms_ecu, self.motor_ecu,
+            self.hybrid_ctrl_ecu, self.regen_brake_ecu
+        ])
+
+        # Start Deterministic Scheduler
+        from core.scheduler import scheduler
+        scheduler.start()
+
+        print("[CAN NETWORK] All 8 ECUs online [OK]")
         print("[CAN NETWORK] Logger: ACTIVE")
         print("[CAN NETWORK] Arbitration: ACTIVE")
         print("-" * 60)
@@ -74,6 +85,9 @@ class CANNetwork:
         can_timing_monitor.stop()
         self.drive_cycle.stop()
         self.logger.stop()
+        self.notifier.stop()
+        from core.scheduler import scheduler
+        scheduler.stop()
         self.engine_ecu.stop()
         self.abs_ecu.stop()
         self.airbag_ecu.stop()
@@ -86,7 +100,11 @@ class CANNetwork:
         print("[CAN NETWORK] All ECUs stopped.")
 
     def get_bus(self):
-        return self.bus
+        return can.Bus(
+            interface='virtual',
+            channel='CANVAS_CAN',
+            receive_own_messages=True
+        )
 
     def get_logger(self):
         return self.logger

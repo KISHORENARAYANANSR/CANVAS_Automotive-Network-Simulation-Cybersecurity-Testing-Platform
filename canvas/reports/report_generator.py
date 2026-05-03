@@ -40,13 +40,13 @@ class ReportGenerator:
       with open(html_file, 'w', encoding='utf-8') as f:
         f.write(html)
 
-      print(f"[REPORT] ✅ HTML report generated: {html_file}")
+      print(f"[REPORT] [OK] HTML report generated: {html_file}")
       return html_file
 
     def _build_html(self, state, log_stats, dtcs):
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
 
-        # ── SWC Architecture Data ─────────────────────────────
+        # -- SWC Architecture Data -----------------------------
         swc_data = [
             {
                 'name'    : 'EngineECU',
@@ -201,7 +201,7 @@ class ReportGenerator:
             },
         ]
 
-        # ── Build SWC rows ────────────────────────────────────
+        # -- Build SWC rows ------------------------------------
         swc_rows = ''
         for swc in swc_data:
             bus_color = {
@@ -243,7 +243,7 @@ class ReportGenerator:
                 <td>{dtcs_html}</td>
             </tr>'''
 
-        # ── DTC rows ──────────────────────────────────────────
+        # -- DTC rows ------------------------------------------
         if dtcs:
             dtc_rows = ''
             for d in dtcs:
@@ -284,10 +284,10 @@ class ReportGenerator:
             <tr><td colspan="6"
                 style="text-align:center;
                 color:#3a6a9c;padding:20px">
-                ✓ No active faults
+                [DONE] No active faults
             </td></tr>'''
 
-        # ── ECU stats rows ────────────────────────────────────
+        # -- ECU stats rows ------------------------------------
         ecu_counts = log_stats.get('ecu_counts', {})
         total_msgs = max(1, log_stats.get('total_msgs', 1))
         ecu_rows   = ''
@@ -325,7 +325,7 @@ class ReportGenerator:
                 </td>
             </tr>'''
 
-        # ── Top CAN IDs ───────────────────────────────────────
+        # -- Top CAN IDs ---------------------------------------
         top_ids      = log_stats.get('top_ids', [])
         top_ids_rows = ''
         for item in top_ids:
@@ -348,7 +348,7 @@ class ReportGenerator:
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CANVAS — AUTOSAR SWC Report</title>
+<title>CANVAS   AUTOSAR SWC Report</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;700&display=swap');
   * {{ margin:0; padding:0; box-sizing:border-box; }}
@@ -421,8 +421,8 @@ class ReportGenerator:
     font-size:10px; font-family:monospace;
     padding:2px 0; color:#4a6a8a;
   }}
-  .io-item.in::before  {{ content:'← '; color:#00cc77; }}
-  .io-item.out::before {{ content:'→ '; color:#00b4ff; }}
+  .io-item.in::before  {{ content:'  '; color:#00cc77; }}
+  .io-item.out::before {{ content:'-> '; color:#00b4ff; }}
   .dtc-tag {{
     display:inline-block; margin:2px;
     padding:1px 6px; border-radius:4px;
@@ -472,12 +472,12 @@ class ReportGenerator:
   <div class="meta">
     Generated: {timestamp}<br>
     Vehicle: Hybrid Car Simulation<br>
-    Networks: CAN · LIN · Ethernet (DoIP)<br>
+    Networks: CAN   LIN   Ethernet (DoIP)<br>
     Total ECUs: 12
   </div>
 </div>
 
-<!-- ── Summary Stats ── -->
+<!-- -- Summary Stats -- -->
 <div class="section">
   <div class="section-header">
     SYSTEM SUMMARY
@@ -519,7 +519,7 @@ class ReportGenerator:
   </div>
 </div>
 
-<!-- ── SWC Architecture ── -->
+<!-- -- SWC Architecture -- -->
 <div class="section">
   <div class="section-header">
     AUTOSAR SOFTWARE COMPONENT (SWC) ARCHITECTURE
@@ -539,7 +539,7 @@ class ReportGenerator:
   </div>
 </div>
 
-<!-- ── CAN Bus Statistics ── -->
+<!-- -- CAN Bus Statistics -- -->
 <div class="section">
   <div class="section-header">
     CAN BUS TRAFFIC ANALYSIS
@@ -599,7 +599,7 @@ class ReportGenerator:
             <span style="color:#4a6a8a">
               Termination:</span>
             <span style="color:#eaf4ff">
-              120Ω × 2</span>
+              120    2</span>
             <span style="color:#4a6a8a">
               Total Errors:</span>
             <span style="color:{
@@ -615,7 +615,7 @@ class ReportGenerator:
   </div>
 </div>
 
-<!-- ── DTC Fault Report ── -->
+<!-- -- DTC Fault Report -- -->
 <div class="section">
   <div class="section-header">
     OBD-II DIAGNOSTIC TROUBLE CODE (DTC) REPORT
@@ -635,7 +635,7 @@ class ReportGenerator:
   </div>
 </div>
 
-<!-- ── Network Architecture ── -->
+<!-- -- Network Architecture -- -->
 <div class="section">
   <div class="section-header">
     IN-VEHICLE NETWORK ARCHITECTURE
@@ -656,58 +656,58 @@ class ReportGenerator:
       </span><br><br>
 
       <span style="color:#00cc77">
-        ┌─ TPMS ECU ─────────────────────────────┐
+         - TPMS ECU ----------------------------- 
       </span><br>
       <span style="color:#00cc77">
-        └─ Window/Seat ECU ──────────────────────┤
+         - Window/Seat ECU ---------------------- 
       </span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <span style="color:#ff9900">
-        ▼ GATEWAY ECU
+          GATEWAY ECU
       </span><br>
       <span style="color:#00b4ff">
-        ┌─ Engine ECU ───────────────────────────┤
+         - Engine ECU --------------------------- 
       </span><br>
       <span style="color:#00b4ff">
-        ├─ ABS ECU ──────────────────────────────┤
+         - ABS ECU ------------------------------ 
       </span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <span style="color:#ff9900">
-        ─── bridges ───►
+        --- bridges --- 
       </span>
       <span style="color:#ffcc00">
         ADAS ECU
       </span><br>
       <span style="color:#00b4ff">
-        ├─ Airbag ECU ───────────────────────────┤
+         - Airbag ECU --------------------------- 
       </span><br>
       <span style="color:#00b4ff">
-        ├─ Transmission ECU ─────────────────────┤
+         - Transmission ECU --------------------- 
       </span>
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <span style="color:#ffcc00">
         Dashboard
       </span><br>
       <span style="color:#00b4ff">
-        ├─ BMS ECU ──────────────────────────────┤
+         - BMS ECU ------------------------------ 
       </span><br>
       <span style="color:#00b4ff">
-        ├─ Motor ECU ────────────────────────────┤
+         - Motor ECU ---------------------------- 
       </span><br>
       <span style="color:#00b4ff">
-        ├─ Hybrid Control ECU ───────────────────┤
+         - Hybrid Control ECU ------------------- 
       </span><br>
       <span style="color:#00b4ff">
-        └─ Regen Brake ECU ──────────────────────┘
+         - Regen Brake ECU ---------------------- 
       </span>
     </div>
   </div>
 </div>
 
 <div class="footer">
-  CANVAS — Hybrid Vehicle Network Simulator &nbsp;·&nbsp;
-  Generated {timestamp} &nbsp;·&nbsp;
-  CAN · LIN · Ethernet (DoIP) &nbsp;·&nbsp;
+  CANVAS   Hybrid Vehicle Network Simulator &nbsp; &nbsp;
+  Generated {timestamp} &nbsp; &nbsp;
+  CAN   LIN   Ethernet (DoIP) &nbsp; &nbsp;
   AUTOSAR Compliant Architecture
 </div>
 

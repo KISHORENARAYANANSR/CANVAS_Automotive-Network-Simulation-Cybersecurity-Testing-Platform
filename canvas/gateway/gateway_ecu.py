@@ -1,7 +1,7 @@
 # CANVAS Project
 # Module: Gateway
 # File: gateway_ecu.py
-# Bridges CAN Bus + LIN Bus → Automotive Ethernet (DoIP)
+# Bridges CAN Bus + LIN Bus -> Automotive Ethernet (DoIP)
 
 import can
 import time
@@ -15,65 +15,65 @@ class GatewayECU:
         self.ethernet_bus = ethernet_bus  # Ethernet bus (shared dict)
         self.running      = True
 
-        # Translated data store — gateway builds this from all networks
+        # Translated data store   gateway builds this from all networks
         self.vehicle_state = {
-            # From CAN — Engine ECU
+            # From CAN   Engine ECU
             'engine_rpm'        : 0,
             'vehicle_speed'     : 0,
             'engine_temp'       : 0,
             'throttle'          : 0,
 
-            # From CAN — ABS ECU
+            # From CAN   ABS ECU
             'wheel_speed_fl'    : 0,
             'wheel_speed_fr'    : 0,
             'wheel_speed_rl'    : 0,
             'wheel_speed_rr'    : 0,
             'brake_pressure'    : 0,
 
-            # From CAN — Airbag ECU
+            # From CAN   Airbag ECU
             'crash_detected'    : False,
             'airbag_deployed'   : False,
             'impact_force'      : 0.0,
 
-            # From CAN — Transmission ECU
+            # From CAN   Transmission ECU
             'current_gear'      : 1,
             'drive_mode'        : 'D',
 
-            # From CAN — BMS ECU
+            # From CAN   BMS ECU
             'battery_soc'       : 0,
             'battery_voltage'   : 0,
             'battery_state'     : 'NORMAL',
 
-            # From CAN — Motor ECU
+            # From CAN   Motor ECU
             'motor_rpm'         : 0,
             'motor_torque'      : 0,
             'motor_mode'        : 'IDLE',
             'regen_active'      : False,
 
-            # From CAN — Hybrid Control ECU
+            # From CAN   Hybrid Control ECU
             'hybrid_mode'       : 'IDLE',
             'engine_active'     : False,
             'motor_active'      : False,
 
-            # From CAN — Regen Brake ECU
+            # From CAN   Regen Brake ECU
             'regen_power'       : 0.0,
             'energy_recovered'  : 0.0,
 
-            # From LIN — TPMS ECU
+            # From LIN   TPMS ECU
             'tyre_pressure_fl'  : 0,
             'tyre_pressure_fr'  : 0,
             'tyre_pressure_rl'  : 0,
             'tyre_pressure_rr'  : 0,
             'tyre_warning'      : False,
 
-            # From LIN — Window/Seat ECU
+            # From LIN   Window/Seat ECU
             'window_fl'         : 0,
             'window_fr'         : 0,
             'rain_detected'     : False,
             'seat_driver_pos'   : 50,
         }
 
-    # ─── CAN Bus Listeners ────────────────────────────────────────
+    # --- CAN Bus Listeners ----------------------------------------
 
     def listen_can_bus(self):
         """Listen to all CAN messages and translate to vehicle state"""
@@ -82,25 +82,25 @@ class GatewayECU:
             if not msg:
                 continue
 
-            # Engine ECU — RPM + Speed
+            # Engine ECU   RPM + Speed
             if msg.arbitration_id == 0x100:
                 self.vehicle_state['engine_rpm']    = (
                     (msg.data[0] << 8) | msg.data[1])
                 self.vehicle_state['vehicle_speed'] = msg.data[2]
 
-            # Engine ECU — Temp + Throttle
+            # Engine ECU   Temp + Throttle
             elif msg.arbitration_id == 0x101:
                 self.vehicle_state['engine_temp']   = msg.data[0]
                 self.vehicle_state['throttle']      = msg.data[1]
 
-            # ABS ECU — Wheel speeds
+            # ABS ECU   Wheel speeds
             elif msg.arbitration_id == 0x200:
                 self.vehicle_state['wheel_speed_fl'] = msg.data[0]
                 self.vehicle_state['wheel_speed_fr'] = msg.data[1]
                 self.vehicle_state['wheel_speed_rl'] = msg.data[2]
                 self.vehicle_state['wheel_speed_rr'] = msg.data[3]
 
-            # ABS ECU — Brake pressure
+            # ABS ECU   Brake pressure
             elif msg.arbitration_id == 0x201:
                 self.vehicle_state['brake_pressure'] = msg.data[0]
 
@@ -117,7 +117,7 @@ class GatewayECU:
                 self.vehicle_state['drive_mode']    = mode_map.get(
                     msg.data[1], 'D')
 
-            # BMS ECU — Battery status
+            # BMS ECU   Battery status
             elif msg.arbitration_id == 0x500:
                 self.vehicle_state['battery_soc']     = msg.data[0]
                 self.vehicle_state['battery_voltage']  = (
@@ -153,7 +153,7 @@ class GatewayECU:
                 self.vehicle_state['energy_recovered'] = (
                     (msg.data[2] << 8) | msg.data[3])
 
-    # ─── LIN Bus Listeners ────────────────────────────────────────
+    # --- LIN Bus Listeners ----------------------------------------
 
     def listen_lin_bus(self):
         """Poll LIN bus dict and translate to vehicle state"""
@@ -186,7 +186,7 @@ class GatewayECU:
 
             time.sleep(0.5)
 
-    # ─── Ethernet Publisher ───────────────────────────────────────
+    # --- Ethernet Publisher ---------------------------------------
 
     def publish_to_ethernet(self):
         """Forward complete vehicle state to Ethernet bus for ADAS ECU"""
@@ -194,7 +194,7 @@ class GatewayECU:
             # Push entire translated vehicle state to ethernet bus
             self.ethernet_bus['vehicle_state'] = self.vehicle_state.copy()
 
-            print(f"[GATEWAY ECU] ✅ Forwarded to Ethernet → "
+            print(f"[GATEWAY ECU] [OK] Forwarded to Ethernet -> "
                   f"Speed:{self.vehicle_state['vehicle_speed']}km/h "
                   f"RPM:{self.vehicle_state['engine_rpm']} "
                   f"HybridMode:{self.vehicle_state['hybrid_mode']} "

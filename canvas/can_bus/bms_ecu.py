@@ -1,13 +1,13 @@
 # CANVAS Project
 # Module: CAN Bus
 # File: bms_ecu.py
-# BMS ECU — realistic SOC drain tied to DriveCycle
+# BMS ECU   realistic SOC drain tied to DriveCycle
 
 import can
-import time
-import threading
+import can
+from utils.can_codec import codec
 
-class BMSECU:
+class BMSECU(can.Listener):
     def __init__(self, bus, drive_cycle):
         self.bus          = bus
         self.dc           = drive_cycle
@@ -20,96 +20,88 @@ class BMSECU:
         self.cell_count   = 28
         self.charge_state = 'NORMAL'
 
-    def simulate_battery(self):
-        """Realistic SOC drain based on drive phase"""
+    def simulate_battery_step(self):
+        """Realistic SOC drain based on drive phase step"""
+        if not self.running: return
         drain_rates = {
-            'IDLE'        : 0.001,   # Very slow drain
-            'ACCELERATING': 0.03,    # Heavy drain
-            'CITY'        : 0.015,   # Moderate drain
-            'HIGHWAY'     : 0.02,    # Steady drain
-            'DECELERATING': -0.01,   # Regen charging
-            'STOPPED'     : 0.001,   # Minimal drain
+            'IDLE'        : 0.001,
+            'ACCELERATING': 0.03,
+            'CITY'        : 0.015,
+            'HIGHWAY'     : 0.02,
+            'DECELERATING': -0.01,
+            'STOPPED'     : 0.001,
         }
-        while self.running:
-            phase       = self.dc.phase
-            drain       = drain_rates.get(phase, 0.01)
-            self.soc    = max(5.0, min(95.0, self.soc - drain))
+        phase       = self.dc.phase
+        drain       = drain_rates.get(phase, 0.01)
+        self.soc    = max(5.0, min(95.0, self.soc - drain))
 
-            # Voltage follows SOC
-            self.voltage  = 160.0 + (self.soc / 100.0) * 85.0
+        # Voltage follows SOC
+        self.voltage  = 160.0 + (self.soc / 100.0) * 85.0
 
-            # Current based on speed
-            self.current  = (self.dc.speed / 120.0) * 60.0
+        # Current based on speed
+        self.current  = (self.dc.speed / 120.0) * 60.0
 
-            # Temp rises with load
-            self.temp_max = 28.0 + (self.dc.speed / 120.0) * 17.0
-            self.temp_min = self.temp_max - 2.0
+        # Temp rises with load
+        self.temp_max = 28.0 + (self.dc.speed / 120.0) * 17.0
+        self.temp_min = self.temp_max - 2.0
 
-            # State
-            if self.soc <= 10.0:
-                self.charge_state = 'CRITICAL'
-            elif self.soc <= 20.0:
-                self.charge_state = 'WARNING'
-            elif phase == 'DECELERATING':
-                self.charge_state = 'CHARGING'
-            else:
-                self.charge_state = 'NORMAL'
+        # State
+        if self.soc <= 10.0:
+            self.charge_state = 'CRITICAL'
+        elif self.soc <= 20.0:
+            self.charge_state = 'WARNING'
+        elif phase == 'DECELERATING':
+            self.charge_state = 'CHARGING'
+        else:
+            self.charge_state = 'NORMAL'
 
-            time.sleep(0.5)
+    def send_battery_status_step(self):
+        """Send CAN frame: SOC + Voltage step"""
+        if not self.running: return
+        
+        state_map = {'NORMAL': 0x00, 'CHARGING': 0x01, 'WARNING': 0x02, 'CRITICAL': 0x03}
+        state_byte = state_map.get(self.charge_state, 0x00)
 
-    def send_battery_status(self):
-        """Send CAN frame: SOC + Voltage (ID: 0x500)"""
-        while self.running:
-            soc_byte   = int(self.soc) & 0xFF
-            volt_high  = (int(self.voltage) >> 8) & 0xFF
-            volt_low   = int(self.voltage) & 0xFF
-            curr_byte  = min(255, int(abs(self.current))) & 0xFF
-            state_map  = {
-                'NORMAL'  : 0x00, 'CHARGING': 0x01,
-                'WARNING' : 0x02, 'CRITICAL': 0x03
-            }
-            state_byte = state_map.get(self.charge_state, 0x00)
+        msg = can.Message(
+            arbitration_id=0x500,
+            data=codec.encode(0x500, {
+                'SOC': self.soc,
+                'Voltage': self.voltage,
+                'State': state_byte
+            }),
+            is_extended_id=False
+        )
+        self.bus.send(msg)
+        print(f"[BMS ECU] Sent -> "
+              f"SOC:{self.soc:.1f}% "
+              f"Volt:{self.voltage:.1f}V "
+              f"State:{self.charge_state}")
 
-            msg = can.Message(
-                arbitration_id=0x500,
-                data=[soc_byte, volt_high, volt_low,
-                      curr_byte, state_byte,
-                      0x00, 0x00, 0x00],
-                is_extended_id=False
-            )
-            self.bus.send(msg)
-            print(f"[BMS ECU] Sent → "
-                  f"SOC:{self.soc:.1f}% "
-                  f"Volt:{self.voltage:.1f}V "
-                  f"State:{self.charge_state}")
-            time.sleep(0.2)
+    def send_temperature_status_step(self):
+        """Send CAN frame: Cell temperatures step"""
+        if not self.running: return
+        msg = can.Message(
+            arbitration_id=0x501,
+            data=codec.encode(0x501, {
+                'Temp_Max': self.temp_max,
+                'Temp_Min': self.temp_min
+            }),
+            is_extended_id=False
+        )
+        self.bus.send(msg)
+        print(f"[BMS ECU] Sent -> "
+              f"TempMax:{self.temp_max:.1f} C "
+              f"TempMin:{self.temp_min:.1f} C")
 
-    def send_temperature_status(self):
-        """Send CAN frame: Cell temperatures (ID: 0x501)"""
-        while self.running:
-            msg = can.Message(
-                arbitration_id=0x501,
-                data=[int(self.temp_max), int(self.temp_min),
-                      self.cell_count,
-                      0x00, 0x00, 0x00, 0x00, 0x00],
-                is_extended_id=False
-            )
-            self.bus.send(msg)
-            print(f"[BMS ECU] Sent → "
-                  f"TempMax:{self.temp_max:.1f}°C "
-                  f"TempMin:{self.temp_min:.1f}°C")
-            time.sleep(0.5)
+    def on_message_received(self, msg):
+        pass
 
     def start(self):
         print("[BMS ECU] Starting...")
-        threads = [
-            threading.Thread(target=self.simulate_battery),
-            threading.Thread(target=self.send_battery_status),
-            threading.Thread(target=self.send_temperature_status),
-        ]
-        for t in threads:
-            t.daemon = True
-            t.start()
+        from core.scheduler import scheduler
+        scheduler.register('BMS_SIM', 500, self.simulate_battery_step)
+        scheduler.register('BMS_STATUS', 200, self.send_battery_status_step)
+        scheduler.register('BMS_TEMP', 500, self.send_temperature_status_step)
 
     def stop(self):
         self.running = False

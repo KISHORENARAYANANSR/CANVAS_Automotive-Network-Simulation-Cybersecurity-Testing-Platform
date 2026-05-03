@@ -1,7 +1,7 @@
 # CANVAS Project
 # Module: Dashboard
 # File: dashboard.py
-# Premium Tesla/ADAS style dashboard — tkinter + matplotlib
+# Premium Tesla/ADAS style dashboard   tkinter + matplotlib
 
 import tkinter as tk
 from tkinter import ttk
@@ -17,7 +17,7 @@ from matplotlib.animation import FuncAnimation
 from collections import deque
 import matplotlib.gridspec as gridspec
 
-# ── Color Palette ─────────────────────────────────────────────────
+# -- Color Palette -------------------------------------------------
 CLR_BG          = '#020818'
 CLR_PANEL       = '#040d24'
 CLR_BORDER      = '#0a1f4e'
@@ -68,23 +68,23 @@ class Dashboard:
             self.temp_data.append(25)
 
         self.root = tk.Tk()
-        self.root.title("CANVAS — Hybrid Vehicle Network")
+        self.root.title("CANVAS   Hybrid Vehicle Network")
         self.root.geometry("1400x820")
         self.root.configure(bg=CLR_BG)
         self.root.resizable(False, False)
 
         self._build_ui()
 
-    # ── UI Builder ────────────────────────────────────────────────
+    # -- UI Builder ------------------------------------------------
 
     def _build_ui(self):
-        # ── Header ────────────────────────────────────────────────
+        # -- Header ------------------------------------------------
         header = tk.Frame(self.root, bg=CLR_BG, height=50)
         header.pack(fill='x', padx=15, pady=(10, 0))
 
         tk.Label(
             header,
-            text="◈  CANVAS",
+            text="   CANVAS",
             bg=CLR_BG, fg=CLR_CYAN,
             font=('Courier', 18, 'bold')
         ).pack(side='left')
@@ -106,7 +106,7 @@ class Dashboard:
 
         # Phase indicator
         self.phase_label = tk.Label(
-            header, text="● IDLE",
+            header, text="* IDLE",
             bg=CLR_BG, fg=CLR_GREEN,
             font=('Courier', 11, 'bold')
         )
@@ -116,20 +116,20 @@ class Dashboard:
         tk.Frame(self.root, bg=CLR_BORDER, height=1).pack(
             fill='x', padx=15, pady=5)
 
-        # ── Main Layout ───────────────────────────────────────────
+        # -- Main Layout -------------------------------------------
         main = tk.Frame(self.root, bg=CLR_BG)
         main.pack(fill='both', expand=True, padx=15, pady=5)
 
-        # Left column — gauges
+        # Left column   gauges
         left = tk.Frame(main, bg=CLR_BG, width=420)
         left.pack(side='left', fill='y', padx=(0, 10))
         left.pack_propagate(False)
 
-        # Center column — graphs
+        # Center column   graphs
         center = tk.Frame(main, bg=CLR_BG)
         center.pack(side='left', fill='both', expand=True)
 
-        # Right column — status panels
+        # Right column   status panels
         right = tk.Frame(main, bg=CLR_BG, width=280)
         right.pack(side='right', fill='y', padx=(10, 0))
         right.pack_propagate(False)
@@ -138,12 +138,12 @@ class Dashboard:
         self._build_graphs(center)
         self._build_status(right)
 
-        # ── ADAS Warning Bar ──────────────────────────────────────
+        # -- ADAS Warning Bar --------------------------------------
         tk.Frame(self.root, bg=CLR_BORDER, height=1).pack(
             fill='x', padx=15, pady=5)
         self._build_adas_bar()
 
-    # ── Gauges ────────────────────────────────────────────────────
+    # -- Gauges ----------------------------------------------------
 
     def _build_gauges(self, parent):
         tk.Label(
@@ -169,7 +169,7 @@ class Dashboard:
         self._draw_gauge(self.ax_speed, 0,   'SPEED',  'km/h',  CLR_CYAN,   0,   140)
         self._draw_gauge(self.ax_rpm,   0,   'RPM',    'x1000', CLR_BLUE,   0,   5)
         self._draw_gauge(self.ax_soc,   75,  'BATTERY','%',     CLR_GREEN,  0,   100)
-        self._draw_gauge(self.ax_temp,  25,  'TEMP',   '°C',    CLR_YELLOW, 20,  110)
+        self._draw_gauge(self.ax_temp,  25,  'TEMP',   ' C',    CLR_YELLOW, 20,  110)
 
         canvas = FigureCanvasTkAgg(self.gauge_fig, parent)
         canvas.get_tk_widget().pack(fill='both', expand=True)
@@ -257,7 +257,7 @@ class Dashboard:
         self._draw_gauge(ax, value, label, unit,
                          color, vmin, vmax)
 
-    # ── Live Graphs ───────────────────────────────────────────────
+    # -- Live Graphs -----------------------------------------------
 
     def _build_graphs(self, parent):
         tk.Label(
@@ -283,7 +283,7 @@ class Dashboard:
             (self.ax_g_speed, 'SPEED  km/h',  CLR_CYAN),
             (self.ax_g_rpm,   'RPM',          CLR_BLUE),
             (self.ax_g_soc,   'BATTERY  %',   CLR_GREEN),
-            (self.ax_g_temp,  'ENGINE  °C',   CLR_YELLOW),
+            (self.ax_g_temp,  'ENGINE   C',   CLR_YELLOW),
         ]:
             ax.set_facecolor(CLR_PANEL)
             ax.set_title(title, color=color,
@@ -348,7 +348,7 @@ class Dashboard:
 
         self.graph_canvas.draw_idle()
 
-    # ── Status Panels ─────────────────────────────────────────────
+    # -- Status Panels ---------------------------------------------
 
     def _build_status(self, parent):
         tk.Label(
@@ -360,19 +360,19 @@ class Dashboard:
         # Status items
         self.status_vars = {}
         items = [
-            ('hybrid_mode',    '⚡ HYBRID MODE',   CLR_GREEN),
-            ('current_gear',   '⚙  GEAR',          CLR_CYAN),
-            ('drive_mode',     '🚗 DRIVE MODE',     CLR_BLUE),
-            ('motor_mode',     '🔌 MOTOR MODE',     CLR_CYAN),
-            ('motor_torque',   '💪 TORQUE (Nm)',    CLR_BLUE),
-            ('regen_power',    '♻  REGEN (kW)',     CLR_GREEN),
-            ('energy_recovered','⚡ RECOVERED (Wh)', CLR_GREEN),
-            ('brake_pressure', '🛞 BRAKE (bar)',    CLR_YELLOW),
-            ('impact_force',   '💥 IMPACT (G)',     CLR_RED),
-            ('tyre_pressure_fl','🔴 TYRE FL (PSI)', CLR_CYAN),
-            ('tyre_pressure_fr','🔴 TYRE FR (PSI)', CLR_CYAN),
-            ('window_fl',      '🪟 WINDOW FL (%)', CLR_TEXT_DIM),
-            ('rain_detected',  '🌧  RAIN',          CLR_BLUE),
+            ('hybrid_mode',    '[POW] HYBRID MODE',   CLR_GREEN),
+            ('current_gear',   '   GEAR',          CLR_CYAN),
+            ('drive_mode',     '[CAR] DRIVE MODE',     CLR_BLUE),
+            ('motor_mode',     '  MOTOR MODE',     CLR_CYAN),
+            ('motor_torque',   '  TORQUE (Nm)',    CLR_BLUE),
+            ('regen_power',    '   REGEN (kW)',     CLR_GREEN),
+            ('energy_recovered','[POW] RECOVERED (Wh)', CLR_GREEN),
+            ('brake_pressure', '  BRAKE (bar)',    CLR_YELLOW),
+            ('impact_force',   '  IMPACT (G)',     CLR_RED),
+            ('tyre_pressure_fl','[ERROR] TYRE FL (PSI)', CLR_CYAN),
+            ('tyre_pressure_fr','[ERROR] TYRE FR (PSI)', CLR_CYAN),
+            ('window_fl',      '  WINDOW FL (%)', CLR_TEXT_DIM),
+            ('rain_detected',  '   RAIN',          CLR_BLUE),
         ]
 
         for key, label, color in items:
@@ -399,7 +399,7 @@ class Dashboard:
             var.pack(side='right', padx=6)
             self.status_vars[key] = var
 
-    # ── ADAS Warning Bar ──────────────────────────────────────────
+    # -- ADAS Warning Bar ------------------------------------------
 
     def _build_adas_bar(self):
         bar = tk.Frame(self.root, bg=CLR_BG)
@@ -413,14 +413,14 @@ class Dashboard:
 
         self.adas_indicators = {}
         warnings = [
-            ('collision_warning', '◉ COLLISION'),
-            ('emergency_brake',   '◉ BRAKE'),
-            ('overspeed_warning', '◉ OVERSPEED'),
-            ('engine_overheat',   '◉ OVERHEAT'),
-            ('battery_critical',  '◉ BATTERY'),
-            ('tyre_warning',      '◉ TYRE'),
-            ('airbag_alert',      '◉ AIRBAG'),
-            ('regen_suggestion',  '◉ REGEN'),
+            ('collision_warning', '  COLLISION'),
+            ('emergency_brake',   '  BRAKE'),
+            ('overspeed_warning', '  OVERSPEED'),
+            ('engine_overheat',   '  OVERHEAT'),
+            ('battery_critical',  '  BATTERY'),
+            ('tyre_warning',      '  TYRE'),
+            ('airbag_alert',      '  AIRBAG'),
+            ('regen_suggestion',  '  REGEN'),
         ]
 
         for key, label in warnings:
@@ -433,7 +433,7 @@ class Dashboard:
             lbl.pack(side='left')
             self.adas_indicators[key] = lbl
 
-    # ── Update Loop ───────────────────────────────────────────────
+    # -- Update Loop -----------------------------------------------
 
     def update_loop(self):
         while self.running:
@@ -470,7 +470,7 @@ class Dashboard:
                     'BATTERY', '%', CLR_GREEN, 0, 100)
                 self._refresh_gauge(
                     self.ax_temp, temp,
-                    'TEMP', '°C', CLR_YELLOW, 20, 110)
+                    'TEMP', ' C', CLR_YELLOW, 20, 110)
                 self.gauge_canvas.draw_idle()
 
                 # Refresh graphs
@@ -487,7 +487,7 @@ class Dashboard:
                 # Phase label
                 phase = s.get('hybrid_mode', 'IDLE')
                 self.phase_label.config(
-                    text=f"● {phase}",
+                    text=f"* {phase}",
                     fg=CLR_GREEN if phase == 'EV'
                     else CLR_YELLOW if phase == 'BOOST'
                     else CLR_CYAN
@@ -495,7 +495,7 @@ class Dashboard:
 
                 # Clock
                 self.clock_label.config(
-                    text=time.strftime('⏱  %H:%M:%S'))
+                    text=time.strftime('[TIME]  %H:%M:%S'))
 
                 # ADAS warnings
                 for key, lbl in self.adas_indicators.items():

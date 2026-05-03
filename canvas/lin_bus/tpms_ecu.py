@@ -1,7 +1,7 @@
 # CANVAS Project
 # Module: LIN Bus
 # File: tpms_ecu.py
-# Simulates TPMS ECU — tyre pressure + temp monitoring on LIN Bus
+# Simulates TPMS ECU   tyre pressure + temp monitoring on LIN Bus
 
 import time
 import random
@@ -12,13 +12,13 @@ class TPMSECU:
         self.lin_bus = lin_bus
         self.running = True
 
-        # Tyre pressure (PSI) — normal range: 32-35 PSI
+        # Tyre pressure (PSI)   normal range: 32-35 PSI
         self.pressure_fl = 33.0    # Front Left
         self.pressure_fr = 33.0    # Front Right
         self.pressure_rl = 32.0    # Rear Left
         self.pressure_rr = 32.0    # Rear Right
 
-        # Tyre temperature (°C)
+        # Tyre temperature ( C)
         self.temp_fl = 28.0
         self.temp_fr = 28.0
         self.temp_rl = 27.0
@@ -33,23 +33,23 @@ class TPMSECU:
         # Thresholds
         self.PRESSURE_MIN = 28.0   # PSI
         self.PRESSURE_MAX = 38.0   # PSI
-        self.TEMP_MAX     = 80.0   # °C
+        self.TEMP_MAX     = 80.0   #  C
 
     def simulate_tyres(self):
         """Simulate gradual pressure and temp changes"""
         while self.running:
             # Pressure slowly drops over time (natural leakage)
-            self.pressure_fl -= random.uniform(0.0, 0.02)
-            self.pressure_fr -= random.uniform(0.0, 0.02)
-            self.pressure_rl -= random.uniform(0.0, 0.02)
-            self.pressure_rr -= random.uniform(0.0, 0.02)
+            self.pressure_fl = max(0.0, self.pressure_fl - random.uniform(0.0, 0.02))
+            self.pressure_fr = max(0.0, self.pressure_fr - random.uniform(0.0, 0.02))
+            self.pressure_rl = max(0.0, self.pressure_rl - random.uniform(0.0, 0.02))
+            self.pressure_rr = max(0.0, self.pressure_rr - random.uniform(0.0, 0.02))
 
-            # Simulate random puncture (0.5% chance)
-            if random.random() < 0.005:
+            # Simulate random puncture (0.1% chance every 0.5s)
+            if random.random() < 0.001:
                 tyre = random.choice(['fl', 'fr', 'rl', 'rr'])
                 setattr(self, f'pressure_{tyre}',
                         random.uniform(15.0, 22.0))
-                print(f"[TPMS ECU] 🔴 PUNCTURE DETECTED — "
+                print(f"[TPMS ECU] [ERROR] PUNCTURE DETECTED   "
                       f"Tyre: {tyre.upper()}!")
 
             # Temperature rises with speed/friction
@@ -75,7 +75,7 @@ class TPMSECU:
 
             if any([self.warning_fl, self.warning_fr,
                     self.warning_rl, self.warning_rr]):
-                print(f"[TPMS ECU] ⚠️  TYRE WARNING → "
+                print(f"[TPMS ECU] [WARN]  TYRE WARNING -> "
                       f"FL:{self.pressure_fl:.1f} "
                       f"FR:{self.pressure_fr:.1f} "
                       f"RL:{self.pressure_rl:.1f} "
@@ -102,15 +102,15 @@ class TPMSECU:
                                 self.warning_rr)
             }
 
-            # Publish to LIN bus (shared dict — simulated LIN)
+            # Publish to LIN bus (shared dict   simulated LIN)
             self.lin_bus['tpms'] = frame
 
-            print(f"[TPMS ECU] LIN Sent → "
+            print(f"[TPMS ECU] LIN Sent -> "
                   f"FL:{self.pressure_fl:.1f} "
                   f"FR:{self.pressure_fr:.1f} "
                   f"RL:{self.pressure_rl:.1f} "
                   f"RR:{self.pressure_rr:.1f} PSI | "
-                  f"Temp FL:{self.temp_fl:.1f}°C")
+                  f"Temp FL:{self.temp_fl:.1f} C")
             time.sleep(1.0)   # LIN is slower than CAN
 
     def start(self):

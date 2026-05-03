@@ -7,10 +7,10 @@ import time
 import threading
 from collections import OrderedDict
 
-# ── Real OBD-II DTC Database ──────────────────────────────────
+# -- Real OBD-II DTC Database ----------------------------------
 DTC_DATABASE = {
 
-    # ── Powertrain (P codes) ──────────────────────────────────
+    # -- Powertrain (P codes) ----------------------------------
     'P0217' : {
         'desc'     : 'Engine Coolant Over Temperature',
         'system'   : 'ENGINE',
@@ -42,7 +42,7 @@ DTC_DATABASE = {
         'action'   : 'Check transmission speed sensor'
     },
 
-    # ── Hybrid/EV (P0A codes) ─────────────────────────────────
+    # -- Hybrid/EV (P0A codes) ---------------------------------
     'P0A00' : {
         'desc'     : 'Drive Motor A Performance',
         'system'   : 'MOTOR',
@@ -80,7 +80,7 @@ DTC_DATABASE = {
         'action'   : 'Check BMS current sensor'
     },
 
-    # ── Chassis (C codes) ─────────────────────────────────────
+    # -- Chassis (C codes) -------------------------------------
     'C0035' : {
         'desc'     : 'Left Front Wheel Speed Sensor Circuit',
         'system'   : 'ABS',
@@ -118,13 +118,13 @@ DTC_DATABASE = {
         'action'   : 'Check tyre pressure and TPMS sensor'
     },
     'C0775' : {
-        'desc'     : 'Tyre Pressure Low — All Tyres',
+        'desc'     : 'Tyre Pressure Low   All Tyres',
         'system'   : 'TPMS',
         'severity' : 'WARNING',
         'action'   : 'Inflate tyres to recommended pressure'
     },
 
-    # ── Body (B codes) ────────────────────────────────────────
+    # -- Body (B codes) ----------------------------------------
     'B0001' : {
         'desc'     : 'Driver Frontal Stage 1 Deployment',
         'system'   : 'AIRBAG',
@@ -144,7 +144,7 @@ DTC_DATABASE = {
         'action'   : 'Fasten seatbelt'
     },
 
-    # ── Network (U codes) ─────────────────────────────────────
+    # -- Network (U codes) -------------------------------------
     'U0001' : {
         'desc'     : 'High Speed CAN Communication Bus',
         'system'   : 'NETWORK',
@@ -171,7 +171,7 @@ DTC_DATABASE = {
     },
 }
 
-# ── Severity colors for dashboard ────────────────────────────
+# -- Severity colors for dashboard ----------------------------
 SEVERITY_COLOR = {
     'CRITICAL' : '#ff2244',
     'WARNING'  : '#ffcc00',
@@ -181,14 +181,14 @@ SEVERITY_COLOR = {
 class DTCManager:
     def __init__(self):
         self.lock          = threading.Lock()
-        # Active DTCs — OrderedDict preserves insertion order
+        # Active DTCs   OrderedDict preserves insertion order
         self.active_dtcs   = OrderedDict()
         # Full history including cleared codes
         self.dtc_history   = []
         self.running       = True
 
     def set_fault(self, code):
-        """Log a DTC fault — called by any ECU"""
+        """Log a DTC fault   called by any ECU"""
         if code not in DTC_DATABASE:
             print(f"[DTC] Unknown code: {code}")
             return
@@ -210,7 +210,7 @@ class DTCManager:
 
                 sev   = DTC_DATABASE[code]['severity']
                 desc  = DTC_DATABASE[code]['desc']
-                print(f"[DTC] 🔴 FAULT SET   "
+                print(f"[DTC] [ERROR] FAULT SET   "
                       f"[{code}] {desc} "
                       f"({sev})")
             else:
@@ -218,19 +218,19 @@ class DTCManager:
                 self.active_dtcs[code]['count'] += 1
 
     def clear_fault(self, code):
-        """Clear a specific DTC — like OBD scanner"""
+        """Clear a specific DTC   like OBD scanner"""
         with self.lock:
             if code in self.active_dtcs:
                 self.active_dtcs[code]['active'] = False
                 del self.active_dtcs[code]
-                print(f"[DTC] ✅ FAULT CLEARED [{code}]")
+                print(f"[DTC] [OK] FAULT CLEARED [{code}]")
 
     def clear_all(self):
-        """Clear all DTCs — like full OBD reset"""
+        """Clear all DTCs   like full OBD reset"""
         with self.lock:
             count = len(self.active_dtcs)
             self.active_dtcs.clear()
-            print(f"[DTC] ✅ All {count} fault(s) cleared")
+            print(f"[DTC] [OK] All {count} fault(s) cleared")
 
     def get_active_dtcs(self):
         """Return list of active DTCs for dashboard"""
@@ -263,6 +263,6 @@ class DTCManager:
         print("[DTC MANAGER] Stopped.")
 
 
-# ── Global DTC Manager instance ───────────────────────────────
+# -- Global DTC Manager instance -------------------------------
 # Shared across all ECUs
 dtc_manager = DTCManager()
