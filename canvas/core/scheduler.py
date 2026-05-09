@@ -32,6 +32,7 @@ class DeterministicScheduler:
         return self.frozen
 
     def start(self):
+        if self.running: return
         self.running = True
         self.thread = threading.Thread(target=self._loop)
         self.thread.daemon = True
@@ -39,6 +40,14 @@ class DeterministicScheduler:
 
     def stop(self):
         self.running = False
+        
+    def clear_tasks(self):
+        self.tasks.clear()
+        self.jitter_stats = {
+            'avg_ms': 0.0,
+            'max_ms': 0.0,
+            'count': 0
+        }
 
     def _loop(self):
         print("[SCHEDULER] Started deterministic single-thread execution.")

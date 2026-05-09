@@ -3,17 +3,14 @@
 import time
 import threading
 import webbrowser
+import os
+import sys
 
-from can_bus.can_network     import CANNetwork
-from lin_bus.tpms_ecu        import TPMSECU
-from lin_bus.window_seat_ecu import WindowSeatECU
-from gateway.secure_gateway  import SecureGatewayECU
-from ethernet.adas_ecu       import ADASECU
-from vehicle.ignition        import IgnitionSystem
-from vehicle.fault_manager   import FaultManager
-from vehicle.fault_injector  import init_injector
-from security.attack_simulator import AttackSimulator
-from app                     import start_server
+# Add the current directory to Python path if run from here
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
+from app import app, socketio, broadcast_loop
+import sim_manager
 
 def open_browser():
     """Wait 2 seconds then open browser automatically"""
@@ -26,62 +23,7 @@ def main():
     print("       CANVAS   Hybrid Vehicle Network Simulator")
     print("       CAN Bus | LIN Bus | Automotive Ethernet")
     print("=" * 60)
-
-    lin_bus      = {}
-    ethernet_bus = {}
-
-    # -- CAN Bus -----------------------------------------------
-    print("\n[CANVAS] Starting CAN Bus layer...")
-    can_network = CANNetwork(ethernet_bus)
-    can_network.start()
-
-    # -- LIN Bus -----------------------------------------------
-    print("\n[CANVAS] Starting LIN Bus layer...")
-    tpms_ecu        = TPMSECU(lin_bus)
-    window_seat_ecu = WindowSeatECU(lin_bus)
-    tpms_ecu.start()
-    window_seat_ecu.start()
-
-    # -- Gateway -----------------------------------------------
-    print("\n[CANVAS] Starting Secure Gateway ECU...")
-    gateway = SecureGatewayECU(
-        can_bus      = can_network.get_bus(),
-        lin_bus      = lin_bus,
-        ethernet_bus = ethernet_bus
-    )
-    can_network.notifier.add_listener(gateway)
-    gateway.start()
-
-    # -- ADAS --------------------------------------------------
-    print("\n[CANVAS] Starting ADAS ECU...")
-    adas = ADASECU(ethernet_bus)
-    adas.start()
-
-    # -- Fault Manager -----------------------------------------
-    print("\n[CANVAS] Starting Fault Manager...")
-    fault_mgr = FaultManager(ethernet_bus)
-    fault_mgr.start()
-
-    # -- Fault Injector ----------------------------------------
-    print("\n[CANVAS] Starting Fault Injector...")
-    injector = init_injector(ethernet_bus)
-
-    # -- CAN Logger --------------------------------------------
-    print("\n[CANVAS] Starting CAN Traffic Logger...")
-    from can_bus.can_logger import init_logger
-    init_logger(can_network.get_bus())
-
-    # -- Attack Simulator --------------------------------------
-    print("\n[CANVAS] Starting Attack Simulator...")
-    attacker = AttackSimulator(can_network.get_bus(), ethernet_bus)
-    attacker.start()
-
-    # -- Ignition in background --------------------------------
-    print("\n[CANVAS] Starting ignition sequence...")
-    ignition = IgnitionSystem(ethernet_bus)
-    ignition.start()
-    time.sleep(0.5)
-
+    
     # -- Auto open browser -------------------------------------
     browser_thread = threading.Thread(
         target=open_browser, daemon=True)
@@ -92,23 +34,19 @@ def main():
     print("=" * 60)
     print("  Browser will open automatically...")
     print("  Or manually go to -> http://localhost:5000")
+    print("  Click 'START SIMULATION' in the dashboard to begin.")
     print("  Press Ctrl+C to shut down CANVAS.")
     print("=" * 60 + "\n")
 
+    # Start the broadcast loop
+    threading.Thread(target=broadcast_loop, daemon=True).start()
+
     try:
-        start_server(ethernet_bus, can_network)
+        socketio.run(app, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)
     except KeyboardInterrupt:
         print("\n[CANVAS] Shutdown signal received...")
     finally:
-        ignition.stop()
-        fault_mgr.stop()
-        injector.stop()
-        attacker.stop()
-        adas.stop()
-        gateway.stop()
-        tpms_ecu.stop()
-        window_seat_ecu.stop()
-        can_network.stop()
+        sim_manager.sim_manager_instance.stop_all()
         print("[CANVAS] All systems stopped. [BYE]")
 
 if __name__ == "__main__":

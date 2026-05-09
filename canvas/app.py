@@ -19,6 +19,8 @@ socketio = SocketIO(
 _ethernet_bus = {}
 _can_network  = None
 
+SIMULATION_STATE = "OFFLINE"
+
 def set_ethernet_bus(bus):
     global _ethernet_bus
     _ethernet_bus = bus
@@ -30,6 +32,12 @@ def set_can_network(network):
 def broadcast_loop():
     while True:
         try:
+            if SIMULATION_STATE != "RUNNING":
+                with app.app_context():
+                    socketio.emit('vehicle_update', {'sim_state': SIMULATION_STATE})
+                time.sleep(1.0)
+                continue
+
             from vehicle.dtc_manager    import dtc_manager
             from can_bus.can_logger     import get_logger
             from vehicle.fault_injector import get_injector
@@ -76,8 +84,10 @@ def broadcast_loop():
                         'ids_active'     : _ethernet_bus.get('ids_active', True),
                         'active_attack'  : _ethernet_bus.get('active_attack', None),
                         'jitter'         : jitter,
-                        'sim_frozen'     : scheduler.frozen
+                        'sim_frozen'     : scheduler.frozen,
+                        'sim_state'      : SIMULATION_STATE
                     })
+
         except Exception as e:
             print(f"[SERVER] Broadcast error: {e}")
         time.sleep(0.1)
@@ -85,6 +95,24 @@ def broadcast_loop():
 @app.route('/')
 def index():
     return render_template('dashboard.html')
+
+@app.route('/api/simulation/start', methods=['POST'])
+def start_simulation():
+    try:
+        import sim_manager as sm
+        sm.start_simulation_async()
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
+
+@app.route('/api/simulation/stop', methods=['POST'])
+def stop_simulation():
+    try:
+        import sim_manager as sm
+        sm.stop_simulation_async()
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
 
 @app.route('/api/inject_fault', methods=['POST'])
 def inject_fault():

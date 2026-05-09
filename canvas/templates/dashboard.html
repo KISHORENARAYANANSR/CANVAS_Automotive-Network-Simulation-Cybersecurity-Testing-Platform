@@ -46,7 +46,7 @@
 
         .shell {
             display: grid;
-            grid-template-rows: 64px 1fr auto;
+            grid-template-rows: auto 1fr auto;
             height: 100vh;
             gap: 0;
             overflow: hidden;
@@ -72,13 +72,32 @@
         /* Header */
         .header {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
             background: #fff;
-            padding: 0 40px 0 16px;
             border-bottom: 2px solid var(--border);
             box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
-            height: 64px;
+            height: auto;
+            z-index: 100;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 40px 12px 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .header-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            padding: 0 16px;
+            box-sizing: border-box;
         }
 
         .logo {
@@ -132,7 +151,9 @@
         .hcenter {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 16px;
+            flex: 1;
+            justify-content: center;
         }
 
         .ign-badge {
@@ -202,29 +223,31 @@
 
         .tabs {
             display: flex;
-            gap: 3px;
+            gap: 24px;
         }
 
         .tab {
-            padding: 4px 12px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
+            padding: 10px 4px 12px 4px;
+            border: none;
+            border-bottom: 3px solid transparent;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 800;
             color: var(--sdim);
             cursor: pointer;
             transition: all .2s;
-            background: #f8fafc;
+            background: transparent;
+            margin-bottom: -1px;
+            letter-spacing: 0.5px;
         }
 
         .tab.active {
             border-color: var(--blue);
             color: var(--blue);
-            background: #eff6ff;
+            background: transparent;
         }
 
         .tab:hover {
-            border-color: var(--blue);
             color: var(--blue);
         }
 
@@ -244,6 +267,41 @@
             font-size: 13px;
             font-weight: 600;
             color: var(--sdim);
+        }
+
+        .sim-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            border: 2px solid;
+            transition: all 0.3s;
+        }
+        .sim-btn.offline {
+            background: #eff6ff;
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+        .sim-btn.offline:hover {
+            background: var(--blue);
+            color: #fff;
+        }
+        .sim-btn.initializing {
+            background: #fffbeb;
+            border-color: var(--yellow);
+            color: var(--yellow);
+            cursor: not-allowed;
+            animation: pulse-orange 2s infinite;
+        }
+        .sim-btn.running {
+            background: #fef2f2;
+            border-color: var(--red);
+            color: var(--red);
+        }
+        .sim-btn.running:hover {
+            background: var(--red);
+            color: #fff;
         }
 
         /* Tab Pages */
@@ -1548,26 +1606,36 @@
 
         <!-- ── Header ── -->
         <header class="header">
-            <div class="logo">
-                <div class="logo-mark">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                        stroke-linejoin="round" style="width: 18px; height: 18px; color: var(--blue);">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        <path d="M12 8v8"></path>
-                        <path d="M8 12h8"></path>
-                    </svg>
+            <div class="header-top">
+                <div class="logo">
+                    <div class="logo-mark">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round" style="width: 18px; height: 18px; color: var(--blue);">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <path d="M12 8v8"></path>
+                            <path d="M8 12h8"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="logo-text">CANVAS</div>
+                        <div class="logo-sub">Automotive Network Simulation & Cybersecurity Testing Platform</div>
+                    </div>
                 </div>
-                <div>
-                    <div class="logo-text">CANVAS</div>
-                    <div class="logo-sub">Automotive Network Simulation & Cybersecurity Testing Platform</div>
+
+                <div class="hcenter">
+                    <div class="ign-badge" id="ignBadge">● OFF</div>
+                    <div class="fpill crit" id="critCount">0 CRITICAL ALERTS</div>
+                    <div class="fpill warn" id="warnCount">0 ACTIVE WARNINGS</div>
+                    <div class="fpill test" id="testModePill">TEST MODE ACTIVE</div>
+                </div>
+
+                <div class="hright">
+                    <button id="simControlBtn" onclick="toggleSimulation()" class="sim-btn offline">START SIMULATION</button>
+                    <div class="clock" id="clock">--:--:--</div>
                 </div>
             </div>
 
-            <div class="hcenter">
-                <div class="ign-badge" id="ignBadge">● OFF</div>
-                <div class="fpill crit" id="critCount">0 CRITICAL ALERTS</div>
-                <div class="fpill warn" id="warnCount">0 ACTIVE WARNINGS</div>
-                <div class="fpill test" id="testModePill">TEST MODE ACTIVE</div>
+            <div class="header-bottom">
                 <div class="tabs">
                     <div class="tab active" onclick="switchTab('main')">DASHBOARD</div>
                     <div class="tab" onclick="switchTab('logger')">CAN LOGGER</div>
@@ -1575,10 +1643,6 @@
                     <div class="tab" onclick="switchTab('security')">VEHICLE SECURITY</div>
                     <div class="tab" onclick="switchTab('report')">SYSTEM REPORT</div>
                 </div>
-            </div>
-
-            <div class="hright">
-                <div class="clock" id="clock">--:--:--</div>
             </div>
         </header>
 
@@ -2181,6 +2245,77 @@
         <div id="toast-container"></div>
 
         <script>
+            // ── Simulation Lifecycle Logic ─────────────────────────────────
+            let simState = null; // null, OFFLINE, INITIALIZING, RUNNING
+
+            function toggleSimulation() {
+                if (simState === "INITIALIZING") return;
+                
+                if (simState === "OFFLINE") {
+                    updateSimState("INITIALIZING");
+                    fetch('/api/simulation/start', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.status !== 'ok') {
+                                showToast('START FAILED', data.msg, 'CRITICAL');
+                                updateSimState("OFFLINE");
+                            }
+                        })
+                        .catch(e => {
+                            showToast('START ERROR', e.message, 'CRITICAL');
+                            updateSimState("OFFLINE");
+                        });
+                } else if (simState === "RUNNING") {
+                    updateSimState("INITIALIZING"); // Use initializing state visually as a stopping indicator
+                    const btn = document.getElementById('simControlBtn');
+                    if (btn) btn.textContent = "STOPPING...";
+                    
+                    fetch('/api/simulation/stop', { method: 'POST' })
+                        .catch(e => console.error(e));
+                }
+            }
+
+            function updateSimState(newState) {
+                if (simState === newState) return;
+                simState = newState;
+                
+                const btn = document.getElementById('simControlBtn');
+                if (btn) {
+                    btn.className = "sim-btn " + newState.toLowerCase();
+                    if (newState === "OFFLINE") {
+                        btn.textContent = "START SIMULATION";
+                        btn.disabled = false;
+                    } else if (newState === "INITIALIZING") {
+                        btn.textContent = "INITIALIZING...";
+                        btn.disabled = true; // prevent duplicate clicks
+                    } else if (newState === "RUNNING") {
+                        btn.textContent = "STOP SIMULATION";
+                        btn.disabled = false;
+                    }
+                }
+                
+                const isInteractive = (newState === "RUNNING");
+                
+                const masterToggle = document.getElementById('testModeMasterToggle');
+                const testModeSection = document.getElementById('testModeControls');
+                if (masterToggle) masterToggle.disabled = !isInteractive;
+                if (testModeSection) testModeSection.classList.toggle('disabled', !isInteractive);
+                
+                document.querySelectorAll('.inj-btn, .test-btn').forEach(b => {
+                    if (b.id !== 'simControlBtn' && b.id !== 'reportBtn') {
+                        b.disabled = !isInteractive;
+                        b.style.opacity = isInteractive ? '1' : '0.5';
+                        b.style.cursor = isInteractive ? 'pointer' : 'not-allowed';
+                    }
+                });
+
+                if (newState === "OFFLINE") {
+                    document.getElementById('ignBadge').textContent = '● OFFLINE';
+                    document.getElementById('ignBadge').className = 'ign-badge';
+                    // We DO NOT clear charts/logs as per user request to freeze state.
+                }
+            }
+
             // ── Test Panel Logic ──────────────────────────────────────────
             let activeAttacks = { speed_spoof: false, brake_spoof: false, dos: false };
             let idsActive = true;
@@ -2679,7 +2814,19 @@
                 }
             }
 
+            socket.on('simulation_error', function (err) {
+                showToast('SIMULATION CRASHED', err.msg || 'Backend failed unexpectedly', 'CRITICAL');
+                updateSimState('OFFLINE');
+            });
+
             socket.on('vehicle_update', function (data) {
+                if (data.sim_state) {
+                    updateSimState(data.sim_state);
+                    if (data.sim_state !== 'RUNNING') {
+                        if (!data.state) return;
+                    }
+                }
+                
                 const s = data.state || {};
                 const d = data.decisions || {};
                 const dtcs = data.dtcs || [];

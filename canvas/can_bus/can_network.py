@@ -88,6 +88,7 @@ class CANNetwork:
         self.notifier.stop()
         from core.scheduler import scheduler
         scheduler.stop()
+        scheduler.clear_tasks()
         self.engine_ecu.stop()
         self.abs_ecu.stop()
         self.airbag_ecu.stop()
