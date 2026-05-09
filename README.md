@@ -13,6 +13,11 @@
 An industry-grade automotive network simulation and cybersecurity testing platform designed to emulate real-world ECU communication, CAN/LIN networks, and in-vehicle cyber attacks.
 
 ---
+## 🌐 Live Demo
+
+https://canvas-platform.onrender.com/
+
+---
 
 ## 🚀 Why This Matters
 
