@@ -7,207 +7,308 @@
 
 ## 📌 Overview
 
-## CANVAS — Automotive Network Simulation & Cybersecurity Platform
+### CANVAS — Automotive Network Simulation & Cybersecurity Platform  
 *CAN-LIN Automotive Network Virtual Architecture Simulator*
 
-An industry-grade automotive network simulation and cybersecurity testing platform designed to emulate real-world ECU communication, CAN/LIN networks, and in-vehicle cyber attacks.
+CANVAS is an industry-grade automotive network simulation and cybersecurity testing platform designed to emulate real-world ECU communication, CAN/LIN networks, and in-vehicle cyber attacks.
+
+The platform simulates multiple automotive Electronic Control Units (ECUs), deterministic CAN communication, fault injection, IDS monitoring, and real-time dashboard visualization — all without requiring physical automotive hardware.
 
 ---
+
 ## 🌐 Live Demo
 
 https://canvas-platform.onrender.com/
+
+> ⚠️ Note: The platform is hosted on Render Free Tier.  
+> Initial loading may take 30–60 seconds if the service is waking up.
 
 ---
 
 ## 🚀 Why This Matters
 
-Modern vehicles rely on complex in-vehicle networks (CAN, LIN, Ethernet).  
-Testing cybersecurity vulnerabilities and fault scenarios in real vehicles is expensive and risky.
+Modern vehicles rely heavily on in-vehicle communication networks such as:
+- CAN Bus
+- LIN Bus
+- Automotive Ethernet
 
-CANVAS provides a safe environment to:
+Testing cybersecurity vulnerabilities and fault scenarios on real vehicles is:
+- Expensive
+- Risky
+- Hardware-dependent
+
+CANVAS provides a safe and accessible environment to:
 - Simulate ECU communication
 - Test cyber attacks (Spoofing, DoS)
 - Validate IDS systems
 - Analyze real-time vehicle network behavior
+- Perform FMEA-based automotive testing
 
 ---
 
+## ▶️ Simulation Lifecycle Control
+
+CANVAS uses a controlled simulation lifecycle system similar to professional automotive simulators.
+
+### Features
+- START SIMULATION
+- STOP SIMULATION
+- Idle resource optimization
+- Dynamic ECU boot sequence
+- Real-time CAN traffic activation
+- Live telemetry synchronization
+
+The dashboard loads in an OFFLINE state initially and activates only when the user starts the simulation.
+
+---
 
 ## 📸 Screenshots  
 
 ### Dashboard View  
-<img width="1919" height="1077" alt="image" src="https://github.com/user-attachments/assets/76ed2f2a-416b-4933-a37f-6aecdef30c69" />
+<img width="1918" height="1078" alt="image" src="https://github.com/user-attachments/assets/e43bd31b-fdeb-41fa-9cb4-ff754724839e" />
 
 ### CAN Logger  
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/7df27990-5f00-478d-bd7b-103dca6b07c5" />
+<img width="1917" height="1078" alt="image" src="https://github.com/user-attachments/assets/5743a427-1e09-489d-942b-90c9291d83d7" />
 
 ### Fault Simulation  
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/bfc35352-482b-4b7e-9320-07ca261eb0fa" />
+<img width="1917" height="1078" alt="image" src="https://github.com/user-attachments/assets/fe5e81a8-906b-4b5f-a95c-16dc5ab7b75f" />
 
 ### Vehicle Security (Cyber Attacks & IDS)  
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/c16978d2-51bb-4c74-bc83-073b21740f1a" />
+<img width="1918" height="1077" alt="image" src="https://github.com/user-attachments/assets/15b79a83-d505-4835-a8d1-f04f0b9865ff" />
 
 ### System Report  
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3ba47c2f-3d92-44a8-89c8-fd383ccdc7e5" />
+<img width="1918" height="1077" alt="image" src="https://github.com/user-attachments/assets/9fa00e57-28b8-4813-b7f1-9f887dd9ea0c" />
 
 ---
 
 ## 🎯 Key Features  
 
 ### 🚘 Real-Time Multi-ECU Simulation  
-- Simulates multiple ECUs (Engine, ABS, Airbag, Transmission, BMS, Motor, Hybrid, Regen)  
-- Real-time signal updates (Speed, RPM, Temperature, Torque, etc.)  
-- Hybrid/EV drive mode visualization  
+- Simulates multiple ECUs:
+  - Engine
+  - ABS
+  - Airbag
+  - Transmission
+  - BMS
+  - Motor
+  - Hybrid Control
+  - Regenerative Braking
+
+- Real-time signal updates:
+  - Speed
+  - RPM
+  - Temperature
+  - Torque
+  - Battery SOC
+  - Brake Pressure
 
 ---
 
 ### 🔌 Automotive Network Protocols  
-- CAN (Controller Area Network)  
-- LIN (Local Interconnect Network)  
-- Ethernet (Gateway simulation)  
-- DBC-based message encoding/decoding using cantools  
+- CAN (Controller Area Network)
+- LIN (Local Interconnect Network)
+- Automotive Ethernet
+- DBC-based message encoding/decoding using cantools
 
 ---
 
 ### ⚙️ Deterministic Real-Time Scheduler  
-- Single-threaded deterministic execution  
-- High-precision timing using time.monotonic()  
-- Maintains < 2ms jitter for consistent simulation  
+- High-precision execution
+- `time.monotonic()` based scheduling
+- < 2ms timing jitter
+- Stable ECU cycle synchronization
 
 ---
 
 ### ⚠️ Fault Simulation (FMEA-Based)  
-- Engine Overheat  
-- Tyre Blowout / TPMS faults  
-- ABS Failure  
-- Battery Failure  
-- Collision Event (Airbag Deployment)  
+Supports:
+- Engine Overheat
+- Tyre Blowout
+- ABS Failure
+- Battery Failure
+- Collision Event
 
-- Generates real DTC codes (e.g., P0217, C0750, B0001)  
-- Updates system behavior dynamically  
+Generates:
+- Real OBD-II DTC codes
+- Dynamic vehicle behavior changes
+- ADAS responses
 
 ---
 
 ### 🔐 Cybersecurity Testing  
-- Speed Spoof Attack  
-- Brake Spoof Attack  
-- DoS Flood Attack  
+Supported attacks:
+- Speed Spoof Attack
+- Brake Spoof Attack
+- DoS Flood Attack
 
-- Simulates real CAN vulnerabilities  
-- Injects malicious frames into the network  
+Capabilities:
+- CAN frame injection
+- Message manipulation
+- Traffic flooding simulation
 
 ---
 
 ### 🛡️ Intrusion Detection System (IDS)  
-- Detects abnormal CAN traffic patterns  
-- Identifies spoofed signals and anomalies  
-- Logs attack details (target CAN ID, value changes)  
-- Real-time alert visualization  
+- Detects abnormal CAN traffic
+- Detects spoofed signal anomalies
+- Real-time security alerts
+- Attack event tracking and logging
 
 ---
 
 ### 📊 Advanced Dashboard  
-- Live vehicle telemetry  
-- ECU status monitoring  
-- CAN traffic analysis (messages/sec, bus load)  
-- Fault & alert visualization  
-- ADAS status indicators  
+Includes:
+- Live telemetry gauges
+- ECU monitoring
+- CAN traffic analytics
+- Bus load visualization
+- DTC visualization
+- IDS alert visualization
+- ADAS indicators
 
 ---
 
 ### 📄 AUTOSAR-Style Report Generation  
-- ECU architecture overview  
-- Signal flow mapping  
-- Network communication structure  
+- ECU architecture mapping
+- Signal flow overview
+- Communication structure reporting
+- Diagnostic summaries
 
 ---
 
 ## 🧠 System Architecture  
 
-CANVAS models a realistic automotive architecture:
+CANVAS models a realistic automotive communication architecture:
 
-- ECUs communicate via CAN/LIN  
-- Gateway ECU connects CAN, LIN, and Ethernet  
-- DBC file defines signal structure and scaling  
-- Scheduler ensures deterministic execution  
-- Attack Simulator injects malicious frames  
-- Secure Gateway (IDS) monitors and detects anomalies  
+- Multi-ECU communication over CAN/LIN
+- Gateway ECU bridging CAN, LIN, and Ethernet
+- DBC-driven signal encoding/decoding
+- Deterministic scheduler execution
+- IDS-enabled secure gateway monitoring
+- Cyber attack simulation layer
+
+---
+
+## ☁️ Cloud Deployment
+
+The platform is publicly deployed using Render Cloud Platform.
+
+### Deployment Features
+- Public cloud hosting
+- Real-time Socket.IO communication
+- Simulation lifecycle control
+- Automatic GitHub redeployment
+- Free-tier optimized architecture
 
 ---
 
 ## 🛠️ Tech Stack  
 
-- Backend: Python, Flask  
-- Frontend: HTML, CSS, JavaScript  
-- Communication: WebSockets  
-- CAN Tools: cantools (DBC parsing and encoding)  
-- Simulation Core: Custom deterministic scheduler  
+### Backend
+- Python
+- Flask
+- Flask-SocketIO
+
+### Frontend
+- HTML
+- CSS
+- JavaScript
+
+### Communication
+- WebSockets
+
+### CAN Tools
+- cantools
+- python-can
+
+### Hosting
+- Render Cloud Platform
 
 ---
 
-## 🚀 How to Run  
+## 🚀 Local Installation  
 
-### 1. Clone the repository  
-git clone https://github.com/your-username/canvas.git
+### 1. Clone Repository
 
-cd canvas
+```bash
+git clone https://github.com/KISHORENARAYANANSR/CANVAS_Automotive-Network-Simulation-Cybersecurity-Testing-Platform.git
 
-### 2. Install dependencies  
+cd CANVAS_Automotive-Network-Simulation-Cybersecurity-Testing-Platform
+```
+
+### 2. Install Dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-### 3. Run the application  
-python app.py
+### 3. Run Application
 
-### 4. Open in browser  
+```bash
+python run.py
+```
+
+### 4. Open Browser
+
+```bash
 http://localhost:5000
+```
 
 ---
 
 ## 🧪 Demo Flow  
 
-1. **Normal Operation**  
-   - Observe live ECU signals and vehicle state  
+### 1. Normal Operation
+- Observe live ECU telemetry
+- Monitor CAN traffic
+- View bus load and ECU activity
 
-2. **Fault Simulation**  
-   - Inject Engine Overheat or Tyre Blowout  
-   - Observe DTC codes and system behavior  
+### 2. Fault Injection
+- Trigger Engine Overheat
+- Trigger Tyre Blowout
+- Observe DTC generation and ADAS response
 
-3. **Cyber Attack Simulation**  
-   - Trigger Speed Spoof or Brake Spoof  
-   - Observe abnormal vehicle response  
+### 3. Cybersecurity Testing
+- Launch Speed Spoof Attack
+- Launch Brake Spoof Attack
+- Launch DoS Attack
 
-4. **IDS Detection**  
-   - View real-time alerts and intrusion logs  
+### 4. IDS Detection
+- Observe real-time attack alerts
+- Analyze abnormal traffic detection
 
 ---
 
 ## 💡 Use Cases  
 
-- Automotive ECU network simulation  
-- CAN bus cybersecurity research  
-- Fault diagnostics and FMEA testing  
-- Embedded systems learning  
-- ADAS and vehicle system prototyping  
+- Automotive ECU network simulation
+- CAN bus cybersecurity research
+- FMEA validation
+- Embedded systems education
+- Automotive software prototyping
+- IDS testing and validation
 
 ---
 
 ## 📈 Impact  
 
-CANVAS provides a controlled environment to:
-- Understand real vehicle communication systems  
-- Test safety-critical faults without physical hardware  
-- Analyze cybersecurity vulnerabilities in CAN networks  
-- Demonstrate automotive system behavior in real time  
+CANVAS enables:
+- Safe testing of vehicle network vulnerabilities
+- Real-time automotive system visualization
+- Hardware-independent automotive experimentation
+- Accessible automotive cybersecurity research
+- Advanced educational automotive simulation
 
 ---
 
 ## 📌 Future Enhancements  
 
-- ML-based anomaly detection  
-- V2V communication integration  
-- Hardware-in-the-loop (HIL) support  
-- Cloud-based simulation and logging  
-- Automotive protocol expansion (UDS, SOME/IP)  
+- ML-based anomaly detection
+- V2V communication integration
+- Hardware-in-the-loop (HIL) support
+- Cloud simulation orchestration
+- UDS / SOME-IP support
+- Automotive digital twin concepts
 
 ---
 
@@ -220,4 +321,5 @@ Focused on Automotive Systems, Embedded AI, and Connected Mobility
 ---
 
 ## 📄 License
+
 This project is licensed under the MIT License.
